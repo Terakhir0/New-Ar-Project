@@ -163,6 +163,62 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
+   * Menjamin video kamera dan canvas 3D selalu menutupi 100vw x 100vh tanpa crop atau bar putih
+   */
+  function enforceFullscreenCamera() {
+    const video = document.querySelector('video') || document.getElementById('arjs-video');
+    if (video) {
+      video.style.setProperty('position', 'fixed', 'important');
+      video.style.setProperty('top', '50%', 'important');
+      video.style.setProperty('left', '50%', 'important');
+      video.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
+      video.style.setProperty('width', '100vw', 'important');
+      video.style.setProperty('height', '100vh', 'important');
+      video.style.setProperty('min-width', '100vw', 'important');
+      video.style.setProperty('min-height', '100vh', 'important');
+      video.style.setProperty('max-width', 'none', 'important');
+      video.style.setProperty('max-height', 'none', 'important');
+      video.style.setProperty('margin', '0', 'important');
+      video.style.setProperty('margin-left', '0', 'important');
+      video.style.setProperty('margin-top', '0', 'important');
+      video.style.setProperty('object-fit', 'cover', 'important');
+      video.style.setProperty('z-index', '0', 'important');
+      video.style.setProperty('display', 'block', 'important');
+    }
+    const canvas = document.querySelector('.a-canvas');
+    if (canvas) {
+      canvas.style.setProperty('position', 'fixed', 'important');
+      canvas.style.setProperty('top', '0', 'important');
+      canvas.style.setProperty('left', '0', 'important');
+      canvas.style.setProperty('width', '100vw', 'important');
+      canvas.style.setProperty('height', '100vh', 'important');
+      canvas.style.setProperty('min-width', '100vw', 'important');
+      canvas.style.setProperty('min-height', '100vh', 'important');
+      canvas.style.setProperty('margin', '0', 'important');
+      canvas.style.setProperty('margin-left', '0', 'important');
+      canvas.style.setProperty('margin-top', '0', 'important');
+      canvas.style.setProperty('z-index', '1', 'important');
+    }
+  }
+
+  window.addEventListener('resize', enforceFullscreenCamera);
+  window.addEventListener('orientationchange', enforceFullscreenCamera);
+  setInterval(enforceFullscreenCamera, 200);
+
+  /**
+   * Helper pencocokan nama klip animasi tanpa terpengaruh huruf besar/kecil
+   */
+  function resolveClipName(entity, requestedClip) {
+    if (!entity || !requestedClip) return requestedClip;
+    const mesh = entity.getObject3D('mesh');
+    if (mesh && mesh.animations && mesh.animations.length > 0) {
+      const match = mesh.animations.find(a => a.name.toLowerCase() === requestedClip.toLowerCase());
+      if (match) return match.name;
+    }
+    return requestedClip;
+  }
+
+  /**
    * Memastikan elemen video AR.js berputar (autoplay on mobile)
    */
   function ensureVideoPlayback() {
@@ -178,9 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (video.readyState >= 2 && cameraPromptOverlay) {
           cameraPromptOverlay.classList.add('hidden');
         }
+        enforceFullscreenCamera();
         clearInterval(checkVideo);
       }
-    }, 400);
+    }, 300);
 
     // Timeout berhenti mengecek setelah 8 detik
     setTimeout(() => clearInterval(checkVideo), 8000);
@@ -234,8 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
         stageModel.setAttribute('rotation', dino.model.rotation);
 
         if (dino.model.idleAnimation) {
+          const idleClip = resolveClipName(stageModel, dino.model.idleAnimation);
           stageModel.setAttribute('animation-mixer', {
-            clip: dino.model.idleAnimation,
+            clip: idleClip,
             loop: 'repeat',
             crossFadeDuration: 0.3
           });
@@ -251,8 +309,9 @@ document.addEventListener('DOMContentLoaded', () => {
         activeEntity.setAttribute('visible', true);
 
         if (dino.model.idleAnimation) {
+          const idleClip = resolveClipName(activeEntity, dino.model.idleAnimation);
           activeEntity.setAttribute('animation-mixer', {
-            clip: dino.model.idleAnimation,
+            clip: idleClip,
             loop: 'repeat',
             crossFadeDuration: 0.3
           });
@@ -383,8 +442,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Jalankan animasi Roar pada model 3D
         if (activeEntity && activeDino.model.roarAnimation) {
+          const roarClip = resolveClipName(activeEntity, activeDino.model.roarAnimation);
           activeEntity.setAttribute('animation-mixer', {
-            clip: activeDino.model.roarAnimation,
+            clip: roarClip,
             loop: 'once',
             clampWhenFinished: true,
             crossFadeDuration: 0.2
@@ -397,8 +457,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Kembalikan ke animasi Idle santai
         if (activeEntity && activeDino && activeDino.model.idleAnimation) {
+          const idleClip = resolveClipName(activeEntity, activeDino.model.idleAnimation);
           activeEntity.setAttribute('animation-mixer', {
-            clip: activeDino.model.idleAnimation,
+            clip: idleClip,
             loop: 'repeat',
             crossFadeDuration: 0.4
           });

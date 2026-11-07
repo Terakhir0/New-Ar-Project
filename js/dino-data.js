@@ -2,12 +2,12 @@
  * ============================================================================
  * KONFIGURASI DATA DINOSAURUS & PLACEHOLDER AR (dino-data.js)
  * ============================================================================
- * File ini berisi semua data placeholder yang dapat Anda ubah dan ganti sendiri:
+ * File ini berisi semua data dinosaurus:
  * - Nama & Nama Ilmiah Dinosaurus
  * - Model 3D (.gltf / .glb)
  * - Animasi Idle & Animasi Roar
- * - Suara Audio Roar (.mp3 / .wav)
- * - QR Code / AR Marker (Hiro, Kanji, Barcode, Pattern .patt)
+ * - Suara Audio Roar (.wav / .mp3)
+ * - QR Code Marker Pattern (.patt) & Gambar Preview (.png)
  * - Sejarah Singkat & Fakta Menarik
  * ============================================================================
  */
@@ -23,14 +23,14 @@ window.DINO_DATABASE = [
     size: "Panjang 12 m | Tinggi 4 m",
     weight: "8 - 14 Ton",
 
-    // --- MARKER / QR ---
+    // --- MARKER QR PATTERN ---
     marker: {
-      type: "hiro",
-      preset: "hiro",
+      type: "pattern",
+      preset: null,
       barcodeValue: null,
-      patternUrl: null,
-      imagePreview: "assets/qr/trex-hiro.svg",
-      description: "Pindai Marker Hiro / QR T-Rex"
+      patternUrl: "assets/qr/pattern-T-rex%20qr-code.patt",
+      imagePreview: "assets/qr/pattern-T-rex%20qr-code.png",
+      description: "Pindai QR Marker T-Rex"
     },
 
     // --- 3D OBJECT & ANIMASI ---
@@ -71,14 +71,14 @@ Memiliki tengkorak kokoh berukuran hingga 1,5 meter dengan rahang berdaya gigit 
     size: "Panjang 14–18 m | Tinggi 5 m",
     weight: "7 - 12 Ton",
 
-    // --- MARKER / QR ---
+    // --- MARKER QR PATTERN ---
     marker: {
-      type: "kanji",
-      preset: "kanji",
+      type: "pattern",
+      preset: null,
       barcodeValue: null,
-      patternUrl: null,
-      imagePreview: "assets/qr/spino-kanji.svg",
-      description: "Pindai Marker Kanji / QR Spinosaurus"
+      patternUrl: "assets/qr/pattern-Spinosaurus%20qr-code.patt",
+      imagePreview: "assets/qr/pattern-Spinosaurus%20qr-code.png",
+      description: "Pindai QR Marker Spinosaurus"
     },
 
     // --- 3D OBJECT & ANIMASI ---
@@ -87,8 +87,8 @@ Memiliki tengkorak kokoh berukuran hingga 1,5 meter dengan rahang berdaya gigit 
       scale: "0.22 0.22 0.22",
       position: "0 0 0",
       rotation: "0 0 0",
-      idleAnimation: "SK_Spinosaurus.ao|AS_Spino_Idle",
-      roarAnimation: "SK_Spinosaurus.ao|AS_Spino_Emote_Threaten"
+      idleAnimation: "SK_Spinosaurus.ao|AS_Spino_WalkF",
+      roarAnimation: "SK_Spinosaurus.ao|AS_Spino_Emote_Broadcast"
     },
 
     // --- SUARA AUDIO ---
@@ -119,14 +119,14 @@ Ciri paling mencolok adalah sirip/layar tulang punggung raksasa yang tingginya m
     size: "Panjang 2 m | Tinggi 0.5 m",
     weight: "15 - 20 Kg",
 
-    // --- MARKER / QR ---
+    // --- MARKER QR PATTERN ---
     marker: {
-      type: "barcode",
+      type: "pattern",
       preset: null,
-      barcodeValue: 2,
-      patternUrl: null,
-      imagePreview: "assets/qr/velo-barcode2.svg",
-      description: "Pindai Marker Barcode 2 / QR Velociraptor"
+      barcodeValue: null,
+      patternUrl: "assets/qr/pattern-velociraptor%20qr-code.patt",
+      imagePreview: "assets/qr/pattern-velociraptor%20qr-code.png",
+      description: "Pindai QR Marker Velociraptor"
     },
 
     // --- 3D OBJECT & ANIMASI ---
@@ -135,8 +135,8 @@ Ciri paling mencolok adalah sirip/layar tulang punggung raksasa yang tingginya m
       scale: "0.85 0.85 0.85",
       position: "0 0 0",
       rotation: "0 0 0",
-      idleAnimation: "SK_Velociraptor.ao|AS_Velo_Idle_V2",
-      roarAnimation: "SK_Velociraptor.ao|AS_Velo_Emote_Threaten"
+      idleAnimation: "SK_Velociraptor.ao|AS_Velo_Crouch_Idle",
+      roarAnimation: "SK_Velociraptor.ao|AS_Velo_Emote_Danger"
     },
 
     // --- SUARA AUDIO ---
@@ -167,14 +167,14 @@ Senjata mematikan utamanya adalah cakar melengkung besar (sickle claw) sepanjang
     size: "Panjang 21 m | Tinggi 12 m",
     weight: "35 - 58 Ton",
 
-    // --- MARKER / QR ---
+    // --- MARKER QR PATTERN ---
     marker: {
-      type: "barcode",
+      type: "pattern",
       preset: null,
-      barcodeValue: 3,
-      patternUrl: null,
-      imagePreview: "assets/qr/brachio-barcode3.svg",
-      description: "Pindai Marker Barcode 3 / QR Brachiosaurus"
+      barcodeValue: null,
+      patternUrl: "assets/qr/pattern-brachi%20qr-code.patt",
+      imagePreview: "assets/qr/pattern-brachi%20qr-code.png",
+      description: "Pindai QR Marker Brachiosaurus"
     },
 
     // --- 3D OBJECT & ANIMASI ---
@@ -215,14 +215,14 @@ Struktur tubuh tersebut memberikan postur miring ke atas menyerupai jerapah mode
     size: "Bentang Sayap 1.5 - 2.5 m",
     weight: "2 - 5 Kg",
 
-    // --- MARKER / QR ---
+    // --- MARKER QR PATTERN ---
     marker: {
-      type: "barcode",
+      type: "pattern",
       preset: null,
-      barcodeValue: 4,
-      patternUrl: null,
-      imagePreview: "assets/qr/ptero-barcode4.svg",
-      description: "Pindai Marker Barcode 4 / QR Pterodactyl"
+      barcodeValue: null,
+      patternUrl: "assets/qr/pattern-ptero%20qr-code.patt",
+      imagePreview: "assets/qr/pattern-ptero%20qr-code.png",
+      description: "Pindai QR Marker Pterodactyl"
     },
 
     // --- 3D OBJECT & ANIMASI ---
@@ -231,8 +231,8 @@ Struktur tubuh tersebut memberikan postur miring ke atas menyerupai jerapah mode
       scale: "0.0022 0.0022 0.0022",
       position: "0 0.5 0",
       rotation: "0 0 0",
-      idleAnimation: "loopFlying",
-      roarAnimation: "Attack(beak)CaptureFromTheAir"
+      idleAnimation: "loopIdle",
+      roarAnimation: "loopFightIdle"
     },
 
     // --- SUARA AUDIO ---

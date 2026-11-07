@@ -62,7 +62,6 @@
        SCENE AR (A-FRAME + AR.JS)
        ======================================================================== -->
   <a-scene
-    embedded
     arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; trackingMethod: best;"
     renderer="logarithmicDepthBuffer: true; colorManagement: true; alpha: true;"
     vr-mode-ui="enabled: false"
@@ -80,8 +79,8 @@
       <a-asset-item id="asset-ptero" src="assets/Pterodactyl/scene.gltf"></a-asset-item>
     </a-assets>
 
-    <!-- 1. Marker HIRO: Tyrannosaurus Rex -->
-    <a-marker id="marker-trex" data-dino-id="trex" preset="hiro" emitevents="true" smooth="true">
+    <!-- 1. Marker T-Rex (Custom QR Pattern & Fallback Hiro) -->
+    <a-marker id="marker-trex" data-dino-id="trex" type="pattern" url="assets/qr/pattern-T-rex%20qr-code.patt" emitevents="true" smooth="true">
       <a-entity
         id="model-trex"
         class="dino-model-entity"
@@ -94,8 +93,8 @@
       ></a-entity>
     </a-marker>
 
-    <!-- 2. Marker KANJI: Spinosaurus -->
-    <a-marker id="marker-spino" data-dino-id="spinosaurus" preset="kanji" emitevents="true" smooth="true">
+    <!-- 2. Marker Spinosaurus (Custom QR Pattern) -->
+    <a-marker id="marker-spino" data-dino-id="spinosaurus" type="pattern" url="assets/qr/pattern-Spinosaurus%20qr-code.patt" emitevents="true" smooth="true">
       <a-entity
         id="model-spino"
         class="dino-model-entity"
@@ -103,13 +102,13 @@
         scale="0.22 0.22 0.22"
         position="0 0 0"
         rotation="0 0 0"
-        animation-mixer="clip: SK_Spinosaurus.ao|AS_Spino_Idle;"
+        animation-mixer="clip: SK_Spinosaurus.ao|AS_Spino_WalkF;"
         visible="false"
       ></a-entity>
     </a-marker>
 
-    <!-- 3. Marker BARCODE 2: Velociraptor -->
-    <a-marker id="marker-velo" data-dino-id="velociraptor" type="barcode" value="2" emitevents="true" smooth="true">
+    <!-- 3. Marker Velociraptor (Custom QR Pattern) -->
+    <a-marker id="marker-velo" data-dino-id="velociraptor" type="pattern" url="assets/qr/pattern-velociraptor%20qr-code.patt" emitevents="true" smooth="true">
       <a-entity
         id="model-velo"
         class="dino-model-entity"
@@ -117,13 +116,13 @@
         scale="0.85 0.85 0.85"
         position="0 0 0"
         rotation="0 0 0"
-        animation-mixer="clip: SK_Velociraptor.ao|AS_Velo_Idle_V2;"
+        animation-mixer="clip: SK_Velociraptor.ao|AS_Velo_Crouch_Idle;"
         visible="false"
       ></a-entity>
     </a-marker>
 
-    <!-- 4. Marker BARCODE 3: Brachiosaurus -->
-    <a-marker id="marker-brachio" data-dino-id="brachiosaurus" type="barcode" value="3" emitevents="true" smooth="true">
+    <!-- 4. Marker Brachiosaurus (Custom QR Pattern) -->
+    <a-marker id="marker-brachio" data-dino-id="brachiosaurus" type="pattern" url="assets/qr/pattern-brachi%20qr-code.patt" emitevents="true" smooth="true">
       <a-entity
         id="model-brachio"
         class="dino-model-entity"
@@ -136,8 +135,8 @@
       ></a-entity>
     </a-marker>
 
-    <!-- 5. Marker BARCODE 4: Pterodactyl -->
-    <a-marker id="marker-ptero" data-dino-id="pterodactyl" type="barcode" value="4" emitevents="true" smooth="true">
+    <!-- 5. Marker Pterodactyl (Custom QR Pattern) -->
+    <a-marker id="marker-ptero" data-dino-id="pterodactyl" type="pattern" url="assets/qr/pattern-ptero%20qr-code.patt" emitevents="true" smooth="true">
       <a-entity
         id="model-ptero"
         class="dino-model-entity"
@@ -145,24 +144,14 @@
         scale="0.0022 0.0022 0.0022"
         position="0 0.5 0"
         rotation="0 0 0"
-        animation-mixer="clip: loopFlying;"
+        animation-mixer="clip: loopIdle;"
         visible="false"
       ></a-entity>
     </a-marker>
 
-    <!-- 6. Marker Kustom Pattern / QR (.patt) -->
-    <a-marker id="marker-qr" data-dino-id="trex" type="pattern" url="assets/qr/qr-marker.patt" emitevents="true" smooth="true">
-      <a-entity
-        id="model-qr-trex"
-        class="dino-model-entity"
-        gltf-model="#asset-trex"
-        scale="0.0018 0.0018 0.0018"
-        position="0 0 0"
-        rotation="0 0 0"
-        animation-mixer="clip: idle attack;"
-        visible="false"
-      ></a-entity>
-    </a-marker>
+    <!-- Fallback Presets (Hiro & Kanji) -->
+    <a-marker id="marker-hiro-fallback" data-dino-id="trex" preset="hiro" emitevents="true" smooth="true"></a-marker>
+    <a-marker id="marker-kanji-fallback" data-dino-id="spinosaurus" preset="kanji" emitevents="true" smooth="true"></a-marker>
 
     <!-- Kamera AR dengan Stage Anchor untuk Tampilan Melayang & Simulasi -->
     <a-entity camera id="mainCamera">
