@@ -79,7 +79,7 @@
       <a-asset-item id="asset-ptero" src="assets/Pterodactyl/scene.gltf"></a-asset-item>
     </a-assets>
 
-    <!-- 1. Marker T-Rex (Custom QR Pattern & Fallback Hiro) -->
+    <!-- 1. Marker T-Rex (Custom QR Pattern) -->
     <a-marker id="marker-trex" data-dino-id="trex" type="pattern" url="assets/qr/pattern-T-rex%20qr-code.patt" emitevents="true" smooth="true">
       <a-entity
         id="model-trex"
@@ -88,70 +88,61 @@
         scale="0.0018 0.0018 0.0018"
         position="0 0 0"
         rotation="0 0 0"
-        animation-mixer="clip: idle attack;"
-        visible="false"
+        animation-mixer="clip: idle attack; loop: repeat;"
       ></a-entity>
     </a-marker>
 
     <!-- 2. Marker Spinosaurus (Custom QR Pattern) -->
-    <a-marker id="marker-spino" data-dino-id="spinosaurus" type="pattern" url="assets/qr/pattern-Spinosaurus%20qr-code.patt" emitevents="true" smooth="true">
+    <a-marker id="marker-spinosaurus" data-dino-id="spinosaurus" type="pattern" url="assets/qr/pattern-Spinosaurus%20qr-code.patt" emitevents="true" smooth="true">
       <a-entity
-        id="model-spino"
+        id="model-spinosaurus"
         class="dino-model-entity"
         gltf-model="#asset-spino"
         scale="0.22 0.22 0.22"
         position="0 0 0"
         rotation="0 0 0"
-        animation-mixer="clip: SK_Spinosaurus.ao|AS_Spino_WalkF;"
-        visible="false"
+        animation-mixer="clip: SK_Spinosaurus.ao|AS_Spino_WalkF; loop: repeat;"
       ></a-entity>
     </a-marker>
 
     <!-- 3. Marker Velociraptor (Custom QR Pattern) -->
-    <a-marker id="marker-velo" data-dino-id="velociraptor" type="pattern" url="assets/qr/pattern-velociraptor%20qr-code.patt" emitevents="true" smooth="true">
+    <a-marker id="marker-velociraptor" data-dino-id="velociraptor" type="pattern" url="assets/qr/pattern-velociraptor%20qr-code.patt" emitevents="true" smooth="true">
       <a-entity
-        id="model-velo"
+        id="model-velociraptor"
         class="dino-model-entity"
         gltf-model="#asset-velo"
         scale="0.85 0.85 0.85"
         position="0 0 0"
         rotation="0 0 0"
-        animation-mixer="clip: SK_Velociraptor.ao|AS_Velo_Crouch_Idle;"
-        visible="false"
+        animation-mixer="clip: SK_Velociraptor.ao|AS_Velo_Crouch_Idle; loop: repeat;"
       ></a-entity>
     </a-marker>
 
     <!-- 4. Marker Brachiosaurus (Custom QR Pattern) -->
-    <a-marker id="marker-brachio" data-dino-id="brachiosaurus" type="pattern" url="assets/qr/pattern-brachi%20qr-code.patt" emitevents="true" smooth="true">
+    <a-marker id="marker-brachiosaurus" data-dino-id="brachiosaurus" type="pattern" url="assets/qr/pattern-brachi%20qr-code.patt" emitevents="true" smooth="true">
       <a-entity
-        id="model-brachio"
+        id="model-brachiosaurus"
         class="dino-model-entity"
         gltf-model="#asset-brachio"
         scale="0.024 0.024 0.024"
         position="0 0 0"
         rotation="0 0 0"
-        animation-mixer="clip: Bip001|Take 001|BaseLayer;"
-        visible="false"
+        animation-mixer="clip: Bip001|Take 001|BaseLayer; loop: repeat;"
       ></a-entity>
     </a-marker>
 
     <!-- 5. Marker Pterodactyl (Custom QR Pattern) -->
-    <a-marker id="marker-ptero" data-dino-id="pterodactyl" type="pattern" url="assets/qr/pattern-ptero%20qr-code.patt" emitevents="true" smooth="true">
+    <a-marker id="marker-pterodactyl" data-dino-id="pterodactyl" type="pattern" url="assets/qr/pattern-ptero%20qr-code.patt" emitevents="true" smooth="true">
       <a-entity
-        id="model-ptero"
+        id="model-pterodactyl"
         class="dino-model-entity"
         gltf-model="#asset-ptero"
         scale="0.0022 0.0022 0.0022"
         position="0 0.5 0"
         rotation="0 0 0"
-        animation-mixer="clip: loopIdle;"
-        visible="false"
+        animation-mixer="clip: loopIdle; loop: repeat;"
       ></a-entity>
     </a-marker>
-
-    <!-- Fallback Presets (Hiro & Kanji) -->
-    <a-marker id="marker-hiro-fallback" data-dino-id="trex" preset="hiro" emitevents="true" smooth="true"></a-marker>
-    <a-marker id="marker-kanji-fallback" data-dino-id="spinosaurus" preset="kanji" emitevents="true" smooth="true"></a-marker>
 
     <!-- Kamera AR dengan Stage Anchor untuk Tampilan Melayang & Simulasi -->
     <a-entity camera id="mainCamera">

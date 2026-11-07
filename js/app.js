@@ -275,11 +275,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log(`[AR] Dinosaurus aktif: ${dino.name} (Mode: ${mode})`);
 
-    // 1. Sembunyikan semua model fisik di marker
-    document.querySelectorAll('.dino-model-entity').forEach(el => {
-      el.setAttribute('visible', false);
-    });
-
     if (mode === 'stage') {
       // Tampilkan model di anchor kamera (Melayang di depan layar / Simulasi)
       if (cameraStage && stageModel) {
@@ -291,9 +286,8 @@ document.addEventListener('DOMContentLoaded', () => {
         stageModel.setAttribute('rotation', dino.model.rotation);
 
         if (dino.model.idleAnimation) {
-          const idleClip = resolveClipName(stageModel, dino.model.idleAnimation);
           stageModel.setAttribute('animation-mixer', {
-            clip: idleClip,
+            clip: dino.model.idleAnimation,
             loop: 'repeat',
             crossFadeDuration: 0.3
           });
@@ -301,21 +295,35 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (btnPinScreen) btnPinScreen.classList.add('active');
     } else {
-      // Tampilkan model pada marker fisik
+      // Mode marker: AR.js menampilkan model secara otomatis saat marker ditemukan.
+      // Kita cukup update animasi idle jika model sudah dimuat.
       if (cameraStage) cameraStage.setAttribute('visible', false);
 
       const activeEntity = document.getElementById(`model-${dino.id}`);
+      console.log(`[AR] Mencari elemen: model-${dino.id}`, activeEntity);
       if (activeEntity) {
+        // Pastikan entitas terlihat (AR.js bisa menonaktifkan visibility)
         activeEntity.setAttribute('visible', true);
+        activeEntity.object3D.visible = true;
 
-        if (dino.model.idleAnimation) {
-          const idleClip = resolveClipName(activeEntity, dino.model.idleAnimation);
-          activeEntity.setAttribute('animation-mixer', {
-            clip: idleClip,
-            loop: 'repeat',
-            crossFadeDuration: 0.3
-          });
+        const applyIdle = () => {
+          if (dino.model.idleAnimation) {
+            activeEntity.setAttribute('animation-mixer', {
+              clip: dino.model.idleAnimation,
+              loop: 'repeat',
+              crossFadeDuration: 0.3
+            });
+          }
+        };
+
+        // Jika model belum dimuat, tunggu event loaded
+        if (activeEntity.getObject3D('mesh')) {
+          applyIdle();
+        } else {
+          activeEntity.addEventListener('model-loaded', applyIdle, { once: true });
         }
+      } else {
+        console.warn(`[AR] Elemen model-${dino.id} TIDAK ditemukan di DOM!`);
       }
       if (btnPinScreen) btnPinScreen.classList.remove('active');
     }
@@ -342,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (activeDisplayMode === 'stage') {
       return stageModel;
     }
+    // ID sudah sinkron dengan dino.id: model-trex, model-spinosaurus, model-velociraptor, dll.
     return document.getElementById(`model-${activeDino.id}`);
   }
 
@@ -360,11 +369,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.DinoAudio.stop();
     btnSound.classList.remove('playing');
 
-    // 2. Sembunyikan seluruh objek 3D (baik di marker maupun di cameraStage)
-    document.querySelectorAll('.dino-model-entity').forEach(el => {
-      el.setAttribute('visible', false);
-    });
+    // 2. Sembunyikan model di cameraStage (simulasi)
     if (cameraStage) cameraStage.setAttribute('visible', false);
+    if (stageModel) stageModel.setAttribute('visible', false);
 
     // 3. Reset state dinosaurus aktif
     activeDino = null;
