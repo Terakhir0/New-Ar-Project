@@ -4,7 +4,7 @@
  * ============================================================================
  * File ini berisi semua data dinosaurus:
  * - Nama & Nama Ilmiah Dinosaurus
- * - Model 3D (.gltf / .glb)
+ * - Model 3D (.glb)
  * - Animasi Idle & Animasi Roar
  * - Suara Audio Roar (.wav / .mp3)
  * - QR Code Marker Pattern (.patt) & Gambar Preview (.png)
@@ -35,7 +35,7 @@ window.DINO_DATABASE = [
 
     // --- 3D OBJECT & ANIMASI ---
     model: {
-      url: "assets/T-Rex/scene.gltf",
+      url: "assets/T-Rex/t-rex.glb",
       scale: "0.0018 0.0018 0.0018",
       position: "0 0 0",
       rotation: "0 0 0",
@@ -83,7 +83,7 @@ Memiliki tengkorak kokoh berukuran hingga 1,5 meter dengan rahang berdaya gigit 
 
     // --- 3D OBJECT & ANIMASI ---
     model: {
-      url: "assets/Spinosaur/scene.gltf",
+      url: "assets/Spinosaur/spinosaur_the_isle_lecasi.glb",
       scale: "0.22 0.22 0.22",
       position: "0 0 0",
       rotation: "0 0 0",
@@ -131,7 +131,7 @@ Ciri paling mencolok adalah sirip/layar tulang punggung raksasa yang tingginya m
 
     // --- 3D OBJECT & ANIMASI ---
     model: {
-      url: "assets/Velociraptor/scene.gltf",
+      url: "assets/Velociraptor/velociraptor_the_isle_lecasi.glb",
       scale: "0.85 0.85 0.85",
       position: "0 0 0",
       rotation: "0 0 0",
@@ -179,7 +179,7 @@ Senjata mematikan utamanya adalah cakar melengkung besar (sickle claw) sepanjang
 
     // --- 3D OBJECT & ANIMASI ---
     model: {
-      url: "assets/Brachiosaur/scene.gltf",
+      url: "assets/Brachiosaur/brachiosaurus_ar_card.glb",
       scale: "0.024 0.024 0.024",
       position: "0 0 0",
       rotation: "0 0 0",
@@ -227,7 +227,7 @@ Struktur tubuh tersebut memberikan postur miring ke atas menyerupai jerapah mode
 
     // --- 3D OBJECT & ANIMASI ---
     model: {
-      url: "assets/Pterodactyl/scene.gltf",
+      url: "assets/Pterodactyl/pterodactyl_reuploaded_and_retextured.glb",
       scale: "0.0022 0.0022 0.0022",
       position: "0 0.5 0",
       rotation: "0 0 0",

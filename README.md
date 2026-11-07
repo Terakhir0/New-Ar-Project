@@ -44,10 +44,11 @@ New Ar Project/
 ├── assets/
 │   ├── sounds/             # Folder file suara (.wav / .mp3)
 │   ├── qr/                 # Folder gambar marker & file pattern (.patt)
-│   ├── T-Rex/              # Model 3D Tyrannosaurus Rex (.gltf + textures)
-│   ├── Spinosaur/          # Model 3D Spinosaurus (.gltf + textures)
-│   ├── Velociraptor/       # Model 3D Velociraptor (.gltf + textures)
-│   └── Brachiosaur/        # Model 3D Brachiosaurus (.gltf + textures)
+│   ├── T-Rex/              # Model 3D Tyrannosaurus Rex (.glb)
+│   ├── Spinosaur/          # Model 3D Spinosaurus (.glb)
+│   ├── Velociraptor/       # Model 3D Velociraptor (.glb)
+│   ├── Brachiosaur/        # Model 3D Brachiosaurus (.glb)
+│   └── Pterodactyl/        # Model 3D Pterodactyl (.glb)
 └── README.md               # Dokumentasi panduan
 ```
 
@@ -57,12 +58,12 @@ New Ar Project/
 
 Semua konfigurasi placeholder dapat Anda ubah dengan mudah pada file **`js/dino-data.js`**.
 
-### 1. Mengganti Objek 3D (.gltf / .glb)
+### 1. Mengganti Objek 3D (.glb)
 1. Salin folder model 3D baru Anda ke dalam folder `assets/NamaDinosaurus/`.
 2. Buka `js/dino-data.js` dan sesuaikan properti `modelUrl`:
    ```javascript
    model: {
-     url: "assets/NamaFolder/scene.gltf", // atau file .glb
+     url: "assets/NamaFolder/nama-model.glb",
      scale: "0.1 0.1 0.1",              // sesuaikan ukuran objek
      position: "0 0 0",
      rotation: "0 0 0",
@@ -77,7 +78,7 @@ Pada file `js/dino-data.js`:
 idleAnimation: "nama_animasi_santai", // Animasi berulang saat diam
 roarAnimation: "nama_animasi_mengaum"  // Animasi saat tombol suara ditekan
 ```
-> **Tips:** Untuk mengetahui daftar nama animasi di dalam file GLTF Anda, Anda dapat membuka file `.gltf` dengan text editor dan mencari kata kunci `"animations": [ {"name": ...} ]`.
+> **Tips:** Untuk mengetahui daftar nama animasi di dalam file GLB Anda, Anda dapat membuka file `.glb` menggunakan aplikasi seperti Blender atau glTF Viewer dan melihat daftar animasinya.
 
 ### 3. Mengganti Suara Audio Roar
 1. Letakkan file audio baru Anda (format `.mp3` atau `.wav`) di dalam folder `assets/sounds/`.
