@@ -36,8 +36,8 @@ window.DINO_DATABASE = [
     // --- 3D OBJECT & ANIMASI ---
     model: {
       url: "assets/T-Rex/t-rex.glb",
-      scale: "0.0018 0.0018 0.0018",
-      position: "0 0 0",
+      scale: "0.16 0.16 0.16",
+      position: "0 0.003 0.35",
       rotation: "0 0 0",
       idleAnimation: "idle attack",
       roarAnimation: "Big roar step"
@@ -84,8 +84,8 @@ Memiliki tengkorak kokoh berukuran hingga 1,5 meter dengan rahang berdaya gigit 
     // --- 3D OBJECT & ANIMASI ---
     model: {
       url: "assets/Spinosaur/spinosaur_the_isle_lecasi.glb",
-      scale: "0.22 0.22 0.22",
-      position: "0 0 0",
+      scale: "0.55 0.55 0.55",
+      position: "0 0.45 0.35",
       rotation: "0 0 0",
       idleAnimation: "SK_Spinosaurus.ao|AS_Spino_WalkF",
       roarAnimation: "SK_Spinosaurus.ao|AS_Spino_Emote_Broadcast"
@@ -132,8 +132,8 @@ Ciri paling mencolok adalah sirip/layar tulang punggung raksasa yang tingginya m
     // --- 3D OBJECT & ANIMASI ---
     model: {
       url: "assets/Velociraptor/velociraptor_the_isle_lecasi.glb",
-      scale: "0.85 0.85 0.85",
-      position: "0 0 0",
+      scale: "0.35 0.35 0.35",
+      position: "0 0.35 0.21",
       rotation: "0 0 0",
       idleAnimation: "SK_Velociraptor.ao|AS_Velo_Crouch_Idle",
       roarAnimation: "SK_Velociraptor.ao|AS_Velo_Emote_Danger"
@@ -180,8 +180,8 @@ Senjata mematikan utamanya adalah cakar melengkung besar (sickle claw) sepanjang
     // --- 3D OBJECT & ANIMASI ---
     model: {
       url: "assets/Brachiosaur/brachiosaurus_ar_card.glb",
-      scale: "0.024 0.024 0.024",
-      position: "0 0 0",
+      scale: "0.12 0.12 0.12",
+      position: "-0.27 0.35 -0.033",
       rotation: "0 0 0",
       idleAnimation: "Bip001|Take 001|BaseLayer",
       roarAnimation: "Bip001|Take 001|BaseLayer"
@@ -228,8 +228,8 @@ Struktur tubuh tersebut memberikan postur miring ke atas menyerupai jerapah mode
     // --- 3D OBJECT & ANIMASI ---
     model: {
       url: "assets/Pterodactyl/pterodactyl_reuploaded_and_retextured.glb",
-      scale: "0.0022 0.0022 0.0022",
-      position: "0 0.5 0",
+      scale: "0.5 0.5 0.5",
+      position: "-0.005 0.7 -0.01",
       rotation: "0 0 0",
       idleAnimation: "loopIdle",
       roarAnimation: "loopFightIdle"

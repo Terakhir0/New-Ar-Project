@@ -71,7 +71,7 @@
     <a-light type="directional" color="#ffffff" intensity="1.6" position="1 4 2"></a-light>
 
     <!-- Preload Assets 3D Model -->
-    <a-assets timeout="12000">
+    <a-assets timeout="60000">
       <a-asset-item id="asset-trex" src="assets/T-Rex/t-rex.glb"></a-asset-item>
       <a-asset-item id="asset-spino" src="assets/Spinosaur/spinosaur_the_isle_lecasi.glb"></a-asset-item>
       <a-asset-item id="asset-velo" src="assets/Velociraptor/velociraptor_the_isle_lecasi.glb"></a-asset-item>
@@ -85,8 +85,8 @@
         id="model-trex"
         class="dino-model-entity"
         gltf-model="#asset-trex"
-        scale="0.0018 0.0018 0.0018"
-        position="0 0 0"
+        scale="0.16 0.16 0.16"
+        position="0 0.003 0.35"
         rotation="0 0 0"
         animation-mixer="clip: idle attack; loop: repeat;"
       ></a-entity>
@@ -98,8 +98,8 @@
         id="model-spinosaurus"
         class="dino-model-entity"
         gltf-model="#asset-spino"
-        scale="0.22 0.22 0.22"
-        position="0 0 0"
+        scale="0.55 0.55 0.55"
+        position="0 0.45 0.35"
         rotation="0 0 0"
         animation-mixer="clip: SK_Spinosaurus.ao|AS_Spino_WalkF; loop: repeat;"
       ></a-entity>
@@ -111,8 +111,8 @@
         id="model-velociraptor"
         class="dino-model-entity"
         gltf-model="#asset-velo"
-        scale="0.85 0.85 0.85"
-        position="0 0 0"
+        scale="0.35 0.35 0.35"
+        position="0 0.35 0.21"
         rotation="0 0 0"
         animation-mixer="clip: SK_Velociraptor.ao|AS_Velo_Crouch_Idle; loop: repeat;"
       ></a-entity>
@@ -124,8 +124,8 @@
         id="model-brachiosaurus"
         class="dino-model-entity"
         gltf-model="#asset-brachio"
-        scale="0.024 0.024 0.024"
-        position="0 0 0"
+        scale="0.12 0.12 0.12"
+        position="-0.27 0.35 -0.033"
         rotation="0 0 0"
         animation-mixer="clip: Bip001|Take 001|BaseLayer; loop: repeat;"
       ></a-entity>
@@ -137,8 +137,8 @@
         id="model-pterodactyl"
         class="dino-model-entity"
         gltf-model="#asset-ptero"
-        scale="0.0022 0.0022 0.0022"
-        position="0 0.5 0"
+        scale="0.5 0.5 0.5"
+        position="-0.005 0.7 -0.01"
         rotation="0 0 0"
         animation-mixer="clip: loopIdle; loop: repeat;"
       ></a-entity>
