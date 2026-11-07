@@ -115,26 +115,56 @@ funFacts: [
 
 ---
 
-## 🚀 Cara Menjalankan & Mengaktifkan Kamera
+## 🌐 Cara Publikasi ke GitHub Pages (Akses Online Tanpa Server Lokal)
 
-Karena Web AR memerlukan izin akses kamera (`navigator.mediaDevices.getUserMedia`), semua browser modern (Chrome, Edge, Safari, Firefox) **memblokir kamera jika file dibuka langsung melalui `file:///...`**. Kamera **HANYA bisa menyala** jika dibuka melalui **`http://localhost`** atau **`HTTPS`**.
+Aplikasi Web AR ini dirancang murni berbasis **Web Statis (HTML/CSS/JS)** tanpa memerlukan backend server sama sekali. Anda dapat meng-hostingnya secara **gratis di GitHub Pages** dengan dukungan **HTTPS otomatis**, sehingga izin kamera langsung aktif di semua smartphone (Android dan iPhone) maupun laptop.
 
-### Cara 1: Menggunakan `start-server.bat` (Paling Praktis di Windows):
-1. Cukup **klik dua kali (double-click)** file **`start-server.bat`** di folder proyek ini.
-2. Script ini akan secara otomatis:
-   - Menjalankan server lokal Python di port 8000.
-   - Membuka browser Anda langsung ke `http://localhost:8000`.
-3. Klik tombol **"Nyalakan Kamera & Mulai AR"** dan pilih **"Izinkan / Allow"** pada pop-up izin kamera browser.
+### Langkah-langkah Unggah ke GitHub & Mengaktifkan GitHub Pages:
 
-### Cara 2: Menggunakan Terminal / Command Prompt:
+#### 1. Buat Repository Baru di GitHub
+1. Buka [github.com/new](https://github.com/new) di browser Anda.
+2. Berikan nama repository, misalnya: `ar-dinosaurus`.
+3. Pilih **Public**.
+4. Jangan centang "Add a README file" (karena sudah ada di folder lokal).
+5. Klik **Create repository**.
+
+#### 2. Sambungkan & Unggah Kode ke GitHub
+Buka terminal / Command Prompt di folder proyek ini (`C:\Users\UseR\Desktop\New Ar Project`), lalu jalankan perintah berikut (ganti `<username>` dan `<repo-name>` dengan milik Anda):
+
 ```bash
-python -m http.server 8000
+git add .
+git commit -m "Update AR Dinosaurus dengan 5 Dinosaurus & Audio Asli"
+git remote add origin https://github.com/<username>/<repo-name>.git
+git push -u origin main
 ```
-Lalu buka browser Anda ke: `http://localhost:8000`
 
-### Menguji di Smartphone:
-1. Pastikan laptop dan ponsel Anda terhubung ke jaringan Wi-Fi yang sama, atau gunakan tunnel HTTPS seperti **ngrok** (`ngrok http 8000`) atau deploy ke GitHub Pages / Vercel / Netlify (gratis HTTPS).
-2. Buka link tersebut di browser ponsel (Chrome di Android atau Safari di iOS).
-3. Izinkan akses kamera ketika pop-up izin muncul.
-4. Buka [`print-markers.html`](file:///c:/Users/UseR/Desktop/New%20Ar%20Project/print-markers.html) di laptop untuk mencetak atau menampilkan marker, lalu arahkan kamera HP ke layar monitor / kertas cetak!
+#### 3. Aktifkan Fitur GitHub Pages
+1. Pada halaman repository GitHub Anda, klik menu tab **Settings** (Pengaturan) di bagian atas.
+2. Di sidebar sebelah kiri, klik menu **Pages** (di bawah kategori *Code and automation*).
+3. Pada bagian **Build and deployment**:
+   - **Source**: Pilih **Deploy from a branch**.
+   - **Branch**: Pilih **main** dan folder **/(root)**.
+   - Klik tombol **Save**.
+4. Tunggu sekitar 1–2 menit, refresh halaman Settings -> Pages tersebut.
+5. Anda akan mendapatkan URL live resmi, misalnya:
+   ```text
+   https://<username>.github.io/<repo-name>/
+   ```
+
+---
+
+## 📱 Cara Menggunakan di Smartphone:
+
+1. Buka tautan GitHub Pages Anda (`https://<username>.github.io/<repo-name>/`) di browser ponsel (Google Chrome di Android atau Safari di iPhone).
+2. Klik **"Nyalakan Kamera & Mulai AR"**, lalu pilih **"Izinkan / Allow"** pada pop-up izin akses kamera.
+3. Buka halaman [`print-markers.html`](file:///c:/Users/UseR/Desktop/New%20Ar%20Project/print-markers.html) di layar monitor laptop untuk menampilkan marker, atau cetak di kertas A4.
+4. Arahkan kamera ponsel Anda ke gambar marker:
+   - **Marker Hiro** ➔ Memunculkan **Tyrannosaurus Rex**
+   - **Marker Kanji** ➔ Memunculkan **Spinosaurus**
+   - **Barcode Matrix 2** ➔ Memunculkan **Velociraptor**
+   - **Barcode Matrix 3** ➔ Memunculkan **Brachiosaurus**
+   - **Barcode Matrix 4** ➔ Memunculkan **Pterodactyl**
+5. Tekan tombol **🔊 Suara Roar** untuk mendengarkan raungan asli dan animasi gerak mengaum.
+6. Tekan tombol **📖 Sejarah Singkat** untuk melihat fakta dan sejarah lengkapnya.
+7. Tekan tombol **✖ Silang** di kanan atas untuk menghilangkan objek dan memindai dinosaurus lain!
 

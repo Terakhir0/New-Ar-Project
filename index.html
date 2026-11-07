@@ -77,6 +77,7 @@
       <a-asset-item id="asset-spino" src="assets/Spinosaur/scene.gltf"></a-asset-item>
       <a-asset-item id="asset-velo" src="assets/Velociraptor/scene.gltf"></a-asset-item>
       <a-asset-item id="asset-brachio" src="assets/Brachiosaur/scene.gltf"></a-asset-item>
+      <a-asset-item id="asset-ptero" src="assets/Pterodactyl/scene.gltf"></a-asset-item>
     </a-assets>
 
     <!-- 1. Marker HIRO: Tyrannosaurus Rex -->
@@ -135,7 +136,21 @@
       ></a-entity>
     </a-marker>
 
-    <!-- 5. Marker Kustom Pattern / QR (.patt) -->
+    <!-- 5. Marker BARCODE 4: Pterodactyl -->
+    <a-marker id="marker-ptero" data-dino-id="pterodactyl" type="barcode" value="4" emitevents="true" smooth="true">
+      <a-entity
+        id="model-ptero"
+        class="dino-model-entity"
+        gltf-model="#asset-ptero"
+        scale="0.0022 0.0022 0.0022"
+        position="0 0.5 0"
+        rotation="0 0 0"
+        animation-mixer="clip: loopFlying;"
+        visible="false"
+      ></a-entity>
+    </a-marker>
+
+    <!-- 6. Marker Kustom Pattern / QR (.patt) -->
     <a-marker id="marker-qr" data-dino-id="trex" type="pattern" url="assets/qr/qr-marker.patt" emitevents="true" smooth="true">
       <a-entity
         id="model-qr-trex"
