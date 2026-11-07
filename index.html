@@ -79,70 +79,13 @@
       <a-asset-item id="asset-ptero" src="assets/Pterodactyl/pterodactyl_reuploaded_and_retextured.glb"></a-asset-item>
     </a-assets>
 
-    <!-- 1. Marker T-Rex (Custom QR Pattern) -->
-    <a-marker id="marker-trex" data-dino-id="trex" type="pattern" url="assets/qr/pattern-T-rex%20qr-code.patt" emitevents="true" smooth="true">
-      <a-entity
-        id="model-trex"
-        class="dino-model-entity"
-        gltf-model="#asset-trex"
-        scale="0.16 0.16 0.16"
-        position="0 0.003 0.35"
-        rotation="0 0 0"
-        animation-mixer="clip: idle attack; loop: repeat;"
-      ></a-entity>
-    </a-marker>
-
-    <!-- 2. Marker Spinosaurus (Custom QR Pattern) -->
-    <a-marker id="marker-spinosaurus" data-dino-id="spinosaurus" type="pattern" url="assets/qr/pattern-Spinosaurus%20qr-code.patt" emitevents="true" smooth="true">
-      <a-entity
-        id="model-spinosaurus"
-        class="dino-model-entity"
-        gltf-model="#asset-spino"
-        scale="0.55 0.55 0.55"
-        position="0 0.45 0.35"
-        rotation="0 0 0"
-        animation-mixer="clip: SK_Spinosaurus.ao|AS_Spino_WalkF; loop: repeat;"
-      ></a-entity>
-    </a-marker>
-
-    <!-- 3. Marker Velociraptor (Custom QR Pattern) -->
-    <a-marker id="marker-velociraptor" data-dino-id="velociraptor" type="pattern" url="assets/qr/pattern-velociraptor%20qr-code.patt" emitevents="true" smooth="true">
-      <a-entity
-        id="model-velociraptor"
-        class="dino-model-entity"
-        gltf-model="#asset-velo"
-        scale="0.35 0.35 0.35"
-        position="0 0.35 0.21"
-        rotation="0 0 0"
-        animation-mixer="clip: SK_Velociraptor.ao|AS_Velo_Crouch_Idle; loop: repeat;"
-      ></a-entity>
-    </a-marker>
-
-    <!-- 4. Marker Brachiosaurus (Custom QR Pattern) -->
-    <a-marker id="marker-brachiosaurus" data-dino-id="brachiosaurus" type="pattern" url="assets/qr/pattern-brachi%20qr-code.patt" emitevents="true" smooth="true">
-      <a-entity
-        id="model-brachiosaurus"
-        class="dino-model-entity"
-        gltf-model="#asset-brachio"
-        scale="0.12 0.12 0.12"
-        position="-0.27 0.35 -0.033"
-        rotation="0 0 0"
-        animation-mixer="clip: Bip001|Take 001|BaseLayer; loop: repeat;"
-      ></a-entity>
-    </a-marker>
-
-    <!-- 5. Marker Pterodactyl (Custom QR Pattern) -->
-    <a-marker id="marker-pterodactyl" data-dino-id="pterodactyl" type="pattern" url="assets/qr/pattern-ptero%20qr-code.patt" emitevents="true" smooth="true">
-      <a-entity
-        id="model-pterodactyl"
-        class="dino-model-entity"
-        gltf-model="#asset-ptero"
-        scale="0.5 0.5 0.5"
-        position="-0.005 0.7 -0.01"
-        rotation="0 0 0"
-        animation-mixer="clip: loopIdle; loop: repeat;"
-      ></a-entity>
-    </a-marker>
+    <!-- Marker hanya berfungsi sebagai pemicu scan.
+         Model 3D ditampilkan di cameraStage agar selalu terlihat dari depan. -->
+    <a-marker id="marker-trex" data-dino-id="trex" type="pattern" url="assets/qr/pattern-T-rex%20qr-code.patt" emitevents="true" smooth="true"></a-marker>
+    <a-marker id="marker-spinosaurus" data-dino-id="spinosaurus" type="pattern" url="assets/qr/pattern-Spinosaurus%20qr-code.patt" emitevents="true" smooth="true"></a-marker>
+    <a-marker id="marker-velociraptor" data-dino-id="velociraptor" type="pattern" url="assets/qr/pattern-velociraptor%20qr-code.patt" emitevents="true" smooth="true"></a-marker>
+    <a-marker id="marker-brachiosaurus" data-dino-id="brachiosaurus" type="pattern" url="assets/qr/pattern-brachi%20qr-code.patt" emitevents="true" smooth="true"></a-marker>
+    <a-marker id="marker-pterodactyl" data-dino-id="pterodactyl" type="pattern" url="assets/qr/pattern-ptero%20qr-code.patt" emitevents="true" smooth="true"></a-marker>
 
     <!-- Kamera AR dengan Stage Anchor untuk Tampilan Melayang & Simulasi -->
     <a-entity camera id="mainCamera">
@@ -211,14 +154,6 @@
           <h2 id="dinoName" class="dino-name">Tyrannosaurus Rex</h2>
           <span id="dinoSubtitle" class="dino-subtitle">Raja Kadal Tirani</span>
         </div>
-
-        <!-- Tombol Pin Tampilan di Layar -->
-        <button id="btnPinScreen" class="btn-pin-screen" title="Kunci Tampilan di Layar (Tetap terlihat tanpa mengarahkan ke kertas)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="17" x2="12" y2="22"></line>
-            <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path>
-          </svg>
-        </button>
       </div>
 
       <!-- Tombol Aksi: Suara Roar & Sejarah Singkat -->

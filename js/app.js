@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // State Aplikasi
   let activeDino = null;
-  let activeDisplayMode = 'marker'; // 'marker' atau 'stage' (pinned/simulated)
   let dismissedCooldown = false;
   let dismissedDinoId = null;
 
@@ -43,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSound = document.getElementById('btnSound');
   const btnHistory = document.getElementById('btnHistory');
   const btnOpenMarkers = document.getElementById('btnOpenMarkers');
-  const btnPinScreen = document.getElementById('btnPinScreen');
 
   // DOM Modals & Stage
   const modalHistory = document.getElementById('modalHistory');
@@ -252,10 +250,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Mengaktifkan Dinosaurus (Saat Marker / QR Berhasil Discan atau Disimulasikan)
+   * Model selalu ditampilkan di cameraStage (menempel di layar) agar terlihat
+   * dari depan dan tidak bergantung pada posisi/sudut QR code.
    * @param {string} dinoId
-   * @param {string} mode - 'marker' (pada kertas marker) atau 'stage' (melayang di depan layar)
    */
-  function activateDinosaur(dinoId, mode = 'marker') {
+  function activateDinosaur(dinoId) {
     const dino = dinoMap.get(dinoId);
     if (!dino) return;
 
@@ -264,68 +263,32 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Jika dinosaurus yang sama sudah aktif dalam mode yang sama, abaikan
-    if (activeDino && activeDino.id === dinoId && activeDisplayMode === mode) {
+    // Jika dinosaurus yang sama sudah aktif, abaikan
+    if (activeDino && activeDino.id === dinoId) {
       return;
     }
 
     activeDino = dino;
-    activeDisplayMode = mode;
     dismissedDinoId = null;
 
-    console.log(`[AR] Dinosaurus aktif: ${dino.name} (Mode: ${mode})`);
+    console.log(`[AR] Dinosaurus aktif: ${dino.name} (Mode: pinned)`);
 
-    if (mode === 'stage') {
-      // Tampilkan model di anchor kamera (Melayang di depan layar / Simulasi)
-      if (cameraStage && stageModel) {
-        cameraStage.setAttribute('visible', true);
-        stageModel.setAttribute('visible', true);
-        stageModel.setAttribute('gltf-model', `url(${dino.model.url})`);
-        stageModel.setAttribute('scale', dino.model.scale);
-        stageModel.setAttribute('position', dino.model.position);
-        stageModel.setAttribute('rotation', dino.model.rotation);
+    // Tampilkan model di anchor kamera sehingga selalu menghadap layar
+    if (cameraStage && stageModel) {
+      cameraStage.setAttribute('visible', true);
+      stageModel.setAttribute('visible', true);
+      stageModel.setAttribute('gltf-model', dino.model.url);
+      stageModel.setAttribute('scale', dino.model.scale);
+      stageModel.setAttribute('position', dino.model.position);
+      stageModel.setAttribute('rotation', dino.model.rotation);
 
-        if (dino.model.idleAnimation) {
-          stageModel.setAttribute('animation-mixer', {
-            clip: dino.model.idleAnimation,
-            loop: 'repeat',
-            crossFadeDuration: 0.3
-          });
-        }
+      if (dino.model.idleAnimation) {
+        stageModel.setAttribute('animation-mixer', {
+          clip: dino.model.idleAnimation,
+          loop: 'repeat',
+          crossFadeDuration: 0.3
+        });
       }
-      if (btnPinScreen) btnPinScreen.classList.add('active');
-    } else {
-      // Mode marker: AR.js menampilkan model secara otomatis saat marker ditemukan.
-      // Kita cukup update animasi idle jika model sudah dimuat.
-      if (cameraStage) cameraStage.setAttribute('visible', false);
-
-      const activeEntity = document.getElementById(`model-${dino.id}`);
-      console.log(`[AR] Mencari elemen: model-${dino.id}`, activeEntity);
-      if (activeEntity) {
-        // Pastikan entitas terlihat (AR.js bisa menonaktifkan visibility)
-        activeEntity.setAttribute('visible', true);
-        activeEntity.object3D.visible = true;
-
-        const applyIdle = () => {
-          if (dino.model.idleAnimation) {
-            activeEntity.setAttribute('animation-mixer', {
-              clip: dino.model.idleAnimation,
-              loop: 'repeat',
-              crossFadeDuration: 0.3
-            });
-          }
-        };
-
-        // Jika model belum dimuat, tunggu event loaded
-        if (activeEntity.getObject3D('mesh')) {
-          applyIdle();
-        } else {
-          activeEntity.addEventListener('model-loaded', applyIdle, { once: true });
-        }
-      } else {
-        console.warn(`[AR] Elemen model-${dino.id} TIDAK ditemukan di DOM!`);
-      }
-      if (btnPinScreen) btnPinScreen.classList.remove('active');
     }
 
     // 2. Perbarui HUD Informasi
@@ -343,15 +306,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Mengambil entitas 3D yang sedang aktif (marker atau stage)
+   * Mengambil entitas 3D yang sedang aktif (selalu camera-anchored)
    */
   function getActiveEntity() {
     if (!activeDino) return null;
-    if (activeDisplayMode === 'stage') {
-      return stageModel;
-    }
-    // ID sudah sinkron dengan dino.id: model-trex, model-spinosaurus, model-velociraptor, dll.
-    return document.getElementById(`model-${activeDino.id}`);
+    return stageModel;
   }
 
   /**
@@ -375,8 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Reset state dinosaurus aktif
     activeDino = null;
-    activeDisplayMode = 'marker';
-    if (btnPinScreen) btnPinScreen.classList.remove('active');
 
     // 4. Sembunyikan kartu HUD dan tombol silang
     dinoCard.classList.remove('visible');
@@ -404,26 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
     e.stopPropagation();
     dismissDinosaur();
   });
-
-  /**
-   * Toggle Kunci Tampilan di Layar (Pin to Screen)
-   */
-  if (btnPinScreen) {
-    btnPinScreen.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (!activeDino) return;
-
-      if (activeDisplayMode === 'marker') {
-        // Alihkan ke tampilan mengambang di layar
-        activateDinosaur(activeDino.id, 'stage');
-        showToast("📌 Objek dikunci di layar (bebas melihat keliling)");
-      } else {
-        // Kembalikan ke pelacakan marker fisik
-        activateDinosaur(activeDino.id, 'marker');
-        showToast("📍 Objek mengikuti marker fisik");
-      }
-    });
-  }
 
   /**
    * Memutar Suara Roar & Animasi Roar
@@ -582,8 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', (e) => {
         const id = e.currentTarget.getAttribute('data-id');
         closeModal(modalMarkers);
-        // Buka langsung dalam mode stage (mengambang di depan layar)
-        activateDinosaur(id, 'stage');
+        activateDinosaur(id);
       });
     });
   }
@@ -596,10 +532,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     markerEl.addEventListener('markerFound', (e) => {
       console.log(`[AR.js] Marker found: ${dinoId}`);
-      // Jika saat ini belum di-pin manual ke layar, aktifkan di marker
-      if (activeDisplayMode !== 'stage') {
-        activateDinosaur(dinoId, 'marker');
-      }
+      // Marker hanya memicu tampil; model selalu muncul menempel di layar.
+      activateDinosaur(dinoId);
     });
 
     markerEl.addEventListener('markerLost', (e) => {
@@ -626,7 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
             for (const [id, dino] of dinoMap.entries()) {
               if (raw === id || raw.includes(`dino=${id}`) || raw.includes(id)) {
                 console.log(`[QR Detector] QR Code dinosaurus terdeteksi: ${dino.name}`);
-                activateDinosaur(id, 'stage');
+                activateDinosaur(id);
                 return;
               }
             }
@@ -704,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const requestedDino = urlParams.get('dino');
   if (requestedDino && dinoMap.has(requestedDino)) {
     setTimeout(() => {
-      activateDinosaur(requestedDino, 'stage');
+      activateDinosaur(requestedDino);
     }, 1200);
   }
 });
