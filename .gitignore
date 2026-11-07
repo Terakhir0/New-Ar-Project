@@ -1,0 +1,10 @@
+# Sistem Operasi
+.DS_Store
+Thumbs.db
+
+# Editor & IDE
+.vscode/
+.idea/
+
+# File Log / Temporary
+*.log

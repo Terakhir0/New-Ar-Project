@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cetak Marker AR Dinosaurus</title>
+  <style>
+    :root {
+      --primary: #10b981;
+      --text: #1e293b;
+      --bg: #f8fafc;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    h1 {
+      font-size: 1.5rem;
+      color: #0f172a;
+    }
+    p.subtitle {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #059669;
+    }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+    }
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+    .marker-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    .marker-card {
+      background: white;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      page-break-inside: avoid;
+    }
+    .marker-card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+      color: #0f172a;
+    }
+    .marker-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+    }
+    .marker-img-wrap {
+      width: 240px;
+      height: 240px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .marker-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .marker-card p {
+      font-size: 0.8rem;
+      color: #64748b;
+      text-align: center;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .header-actions, .no-print {
+        display: none !important;
+      }
+      header {
+        border-bottom: none;
+        margin-bottom: 10px;
+      }
+      .marker-grid {
+        gap: 16px;
+      }
+      .marker-card {
+        border: 1px dashed #94a3b8;
+        padding: 12px;
+      }
+      .marker-img-wrap {
+        width: 220px;
+        height: 220px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>🖨️ Lembar Cetak Marker AR Dinosaurus</h1>
+        <p class="subtitle">Gunakan lembar ini untuk dipindai menggunakan aplikasi Web AR Dinosaurus.</p>
+      </div>
+      <div class="header-actions">
+        <a href="index.html" class="btn btn-secondary">⬅ Kembali ke Kamera AR</a>
+        <button onclick="window.print()" class="btn btn-primary">🖨️ Cetak / Print (Ctrl+P)</button>
+      </div>
+    </header>
+
+    <div class="marker-grid">
+      <!-- Marker 1: T-Rex -->
+      <div class="marker-card">
+        <h2>Tyrannosaurus Rex</h2>
+        <span class="marker-tag">Marker Hiro</span>
+        <div class="marker-img-wrap">
+          <img src="assets/qr/trex-hiro.svg" alt="Marker Hiro T-Rex" />
+        </div>
+        <p>Arahkan kamera AR ke marker di atas untuk memunculkan <strong>T-Rex</strong>.</p>
+      </div>
+
+      <!-- Marker 2: Spinosaurus -->
+      <div class="marker-card">
+        <h2>Spinosaurus</h2>
+        <span class="marker-tag">Marker Kanji</span>
+        <div class="marker-img-wrap">
+          <img src="assets/qr/spino-kanji.svg" alt="Marker Kanji Spinosaurus" />
+        </div>
+        <p>Arahkan kamera AR ke marker di atas untuk memunculkan <strong>Spinosaurus</strong>.</p>
+      </div>
+
+      <!-- Marker 3: Velociraptor -->
+      <div class="marker-card">
+        <h2>Velociraptor</h2>
+        <span class="marker-tag">Barcode Matrix 2</span>
+        <div class="marker-img-wrap">
+          <img src="assets/qr/velo-barcode2.svg" alt="Marker Barcode 2 Velociraptor" />
+        </div>
+        <p>Arahkan kamera AR ke marker di atas untuk memunculkan <strong>Velociraptor</strong>.</p>
+      </div>
+
+      <!-- Marker 4: Brachiosaurus -->
+      <div class="marker-card">
+        <h2>Brachiosaurus</h2>
+        <span class="marker-tag">Barcode Matrix 3</span>
+        <div class="marker-img-wrap">
+          <img src="assets/qr/brachio-barcode3.svg" alt="Marker Barcode 3 Brachiosaurus" />
+        </div>
+        <p>Arahkan kamera AR ke marker di atas untuk memunculkan <strong>Brachiosaurus</strong>.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+

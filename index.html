@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AR Dinosaur Experience - Web AR Interaktif</title>
+
+  <!-- Stylesheet Utama -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- A-Frame Core Framework (v1.3.0) -->
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+
+  <!-- AR.js untuk A-Frame (Marker Tracking) -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <!-- A-Frame Extras (Dukungan animation-mixer untuk animasi 3D GLTF) -->
+  <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+
+  <!-- Data Konfigurasi Placeholder Dinosaurus -->
+  <script src="js/dino-data.js"></script>
+
+  <!-- Audio & Synthesizer System -->
+  <script src="js/audio-synth.js"></script>
+
+  <!-- Logika Aplikasi AR -->
+  <script src="js/app.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+
+  <!-- ========================================================================
+       SCREEN AKTIVASI KAMERA & IZIN AKSES
+       ======================================================================== -->
+  <div id="cameraPromptOverlay" class="camera-prompt-overlay">
+    <div class="camera-prompt-card">
+      <div class="camera-icon-circle">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+          <circle cx="12" cy="13" r="4"></circle>
+        </svg>
+      </div>
+      <h2>AR Dinosaur Explorer</h2>
+      <p>Aplikasi ini memerlukan akses ke kamera perangkat Anda untuk memindai marker atau QR code dan memunculkan dinosaurus 3D di dunia nyata.</p>
+
+      <!-- Peringatan jika file:// dideteksi -->
+      <div id="fileProtocolWarning" class="file-protocol-warning">
+        <strong>⚠️ Akses Kamera Memerlukan HTTPS</strong>
+        <span>Browser memblokir kamera jika file HTML dibuka langsung dari komputer (file://).</span>
+        <span>Setelah diunggah ke <b>GitHub Pages</b>, aplikasi ini akan berjalan secara otomatis dengan HTTPS sehingga kamera langsung dapat diakses di HP maupun laptop.</span>
+      </div>
+
+      <button id="btnStartCamera" class="btn-start-camera">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <span>Nyalakan Kamera & Mulai AR</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       SCENE AR (A-FRAME + AR.JS)
+       ======================================================================== -->
+  <a-scene
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; trackingMethod: best;"
+    renderer="logarithmicDepthBuffer: true; colorManagement: true; alpha: true;"
+    vr-mode-ui="enabled: false"
+  >
+    <!-- Pencahayaan (Lighting) agar model 3D terlihat cerah & tajam -->
+    <a-light type="ambient" color="#ffffff" intensity="1.3"></a-light>
+    <a-light type="directional" color="#ffffff" intensity="1.6" position="1 4 2"></a-light>
+
+    <!-- Preload Assets 3D Model -->
+    <a-assets timeout="12000">
+      <a-asset-item id="asset-trex" src="assets/T-Rex/scene.gltf"></a-asset-item>
+      <a-asset-item id="asset-spino" src="assets/Spinosaur/scene.gltf"></a-asset-item>
+      <a-asset-item id="asset-velo" src="assets/Velociraptor/scene.gltf"></a-asset-item>
+      <a-asset-item id="asset-brachio" src="assets/Brachiosaur/scene.gltf"></a-asset-item>
+    </a-assets>
+
+    <!-- 1. Marker HIRO: Tyrannosaurus Rex -->
+    <a-marker id="marker-trex" data-dino-id="trex" preset="hiro" emitevents="true" smooth="true">
+      <a-entity
+        id="model-trex"
+        class="dino-model-entity"
+        gltf-model="#asset-trex"
+        scale="0.0018 0.0018 0.0018"
+        position="0 0 0"
+        rotation="0 0 0"
+        animation-mixer="clip: idle attack;"
+        visible="false"
+      ></a-entity>
+    </a-marker>
+
+    <!-- 2. Marker KANJI: Spinosaurus -->
+    <a-marker id="marker-spino" data-dino-id="spinosaurus" preset="kanji" emitevents="true" smooth="true">
+      <a-entity
+        id="model-spino"
+        class="dino-model-entity"
+        gltf-model="#asset-spino"
+        scale="0.22 0.22 0.22"
+        position="0 0 0"
+        rotation="0 0 0"
+        animation-mixer="clip: SK_Spinosaurus.ao|AS_Spino_Idle;"
+        visible="false"
+      ></a-entity>
+    </a-marker>
+
+    <!-- 3. Marker BARCODE 2: Velociraptor -->
+    <a-marker id="marker-velo" data-dino-id="velociraptor" type="barcode" value="2" emitevents="true" smooth="true">
+      <a-entity
+        id="model-velo"
+        class="dino-model-entity"
+        gltf-model="#asset-velo"
+        scale="0.85 0.85 0.85"
+        position="0 0 0"
+        rotation="0 0 0"
+        animation-mixer="clip: SK_Velociraptor.ao|AS_Velo_Idle_V2;"
+        visible="false"
+      ></a-entity>
+    </a-marker>
+
+    <!-- 4. Marker BARCODE 3: Brachiosaurus -->
+    <a-marker id="marker-brachio" data-dino-id="brachiosaurus" type="barcode" value="3" emitevents="true" smooth="true">
+      <a-entity
+        id="model-brachio"
+        class="dino-model-entity"
+        gltf-model="#asset-brachio"
+        scale="0.024 0.024 0.024"
+        position="0 0 0"
+        rotation="0 0 0"
+        animation-mixer="clip: Bip001|Take 001|BaseLayer;"
+        visible="false"
+      ></a-entity>
+    </a-marker>
+
+    <!-- 5. Marker Kustom Pattern / QR (.patt) -->
+    <a-marker id="marker-qr" data-dino-id="trex" type="pattern" url="assets/qr/qr-marker.patt" emitevents="true" smooth="true">
+      <a-entity
+        id="model-qr-trex"
+        class="dino-model-entity"
+        gltf-model="#asset-trex"
+        scale="0.0018 0.0018 0.0018"
+        position="0 0 0"
+        rotation="0 0 0"
+        animation-mixer="clip: idle attack;"
+        visible="false"
+      ></a-entity>
+    </a-marker>
+
+    <!-- Kamera AR dengan Stage Anchor untuk Tampilan Melayang & Simulasi -->
+    <a-entity camera id="mainCamera">
+      <a-entity id="cameraStage" position="0 -0.35 -1.8" visible="false">
+        <a-entity id="stageModel" class="dino-model-entity"></a-entity>
+      </a-entity>
+    </a-entity>
+  </a-scene>
+
+  <!-- ========================================================================
+       AR HUD & KONTROL ANTARMUKA (UI LAYER)
+       ======================================================================== -->
+  <div class="ar-overlay">
+
+    <!-- Header Atas: Brand Badge & Tombol-tombol Navigasi -->
+    <header class="hud-top">
+      <div class="brand-badge">
+        <span class="dot"></span>
+        <span>AR Dinosaur Explorer</span>
+      </div>
+
+      <div class="top-buttons">
+        <!-- Tombol Buka Marker & QR Placeholder (Untuk Pengujian & Cetak) -->
+        <button id="btnOpenMarkers" class="btn-icon" title="Daftar Marker & QR Placeholder">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+        </button>
+
+        <!-- TOMBOL SILANG (X): Menghilangkan Objek 3D agar bisa Scan Marker Lain -->
+        <button id="btnCloseDino" class="btn-icon btn-close-dino" title="Tutup Objek 3D & Scan Ulang">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Reticle Scanner Bidik Kamera -->
+    <div id="scannerHud" class="scanner-hud">
+      <div class="reticle-box">
+        <div class="reticle-corner tl"></div>
+        <div class="reticle-corner tr"></div>
+        <div class="reticle-corner bl"></div>
+        <div class="reticle-corner br"></div>
+        <div class="reticle-scanner-line"></div>
+      </div>
+      <div class="scanner-hint">
+        Arahkan kamera ke Marker / QR Code Dinosaurus
+      </div>
+    </div>
+
+    <!-- Kartu Informasi Dinosaurus Aktif (Bottom HUD) -->
+    <section id="dinoCard" class="dino-card">
+      <div class="dino-header">
+        <div class="dino-title-wrap">
+          <div class="dino-badge-row">
+            <span id="dinoDietBadge" class="badge-tag">Karnivora</span>
+            <span id="dinoEraBadge" class="badge-tag era">Kapur Akhir</span>
+          </div>
+          <!-- Nama Dinosaurus -->
+          <h2 id="dinoName" class="dino-name">Tyrannosaurus Rex</h2>
+          <span id="dinoSubtitle" class="dino-subtitle">Raja Kadal Tirani</span>
+        </div>
+
+        <!-- Tombol Pin Tampilan di Layar -->
+        <button id="btnPinScreen" class="btn-pin-screen" title="Kunci Tampilan di Layar (Tetap terlihat tanpa mengarahkan ke kertas)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="17" x2="12" y2="22"></line>
+            <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Tombol Aksi: Suara Roar & Sejarah Singkat -->
+      <div class="dino-actions">
+        <!-- TOMBOL SUARA (Roar Audio & Animasi) -->
+        <button id="btnSound" class="btn-action btn-sound">
+          <span class="sound-wave">
+            <span class="sound-bar"></span>
+            <span class="sound-bar"></span>
+            <span class="sound-bar"></span>
+            <span class="sound-bar"></span>
+          </span>
+          <span>Suara Roar</span>
+        </button>
+
+        <!-- TOMBOL SEJARAH SINGKAT -->
+        <button id="btnHistory" class="btn-action btn-history">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>Sejarah Singkat</span>
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ========================================================================
+       MODAL SEJARAH SINGKAT DINOSAURUS
+       ======================================================================== -->
+  <div id="modalHistory" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span style="font-size: 1.3rem;">📖</span>
+          <span id="histDinoName">Sejarah Dinosaurus</span>
+        </div>
+        <button class="modal-close-btn" title="Tutup">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="font-style: italic; color: #94a3b8;" id="histScientificName">Tyrannosaurus rex</p>
+
+        <!-- Grid Spesifikasi Dinosaurus -->
+        <div class="stat-grid">
+          <div class="stat-box">
+            <span class="stat-label">Periode Era</span>
+            <div id="histEra" class="stat-value">Kapur Akhir</div>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Jenis Makanan</span>
+            <div id="histDiet" class="stat-value">Karnivora</div>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Estimasi Ukuran</span>
+            <div id="histSize" class="stat-value">12 m x 4 m</div>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Perkiraan Bobot</span>
+            <div id="histWeight" class="stat-value">9 Ton</div>
+          </div>
+        </div>
+
+        <div>
+          <h4>Deskripsi Sejarah</h4>
+          <p id="histDescription">Deskripsi sejarah akan dimuat di sini...</p>
+        </div>
+
+        <div>
+          <h4>Fakta Menarik</h4>
+          <ul id="histFunFacts" style="padding-left: 18px; color: #cbd5e1;"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DAFTAR MARKER & QR PLACEHOLDER
+       ======================================================================== -->
+  <div id="modalMarkers" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span style="font-size: 1.3rem;">📋</span>
+          <span>Daftar Marker & QR Placeholder</span>
+        </div>
+        <button class="modal-close-btn" title="Tutup">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Tombol Link Cetak Marker -->
+        <a href="print-markers.html" target="_blank" class="btn-small btn-primary" style="margin-bottom: 8px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          <span>Buka Lembar Cetak Marker (Siap Print)</span>
+        </a>
+
+        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px;">
+          Arahkan kamera ke salah satu gambar marker di bawah ini, atau klik <strong>Simulasi Scan</strong> untuk mencoba langsung tanpa mencetak:
+        </p>
+        <div id="markersListContainer" class="marker-grid">
+          <!-- Daftar item marker dinosaurus diisi otomatis oleh JavaScript -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       TOAST NOTIFICATION
+       ======================================================================== -->
+  <div id="toastNotice" class="toast-notice">
+    <span class="toast-text">Pemberitahuan AR</span>
+  </div>
+
+</body>
+</html>
