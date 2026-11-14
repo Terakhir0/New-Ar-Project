@@ -71,7 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Model 3D dimuat saat marker terdeteksi, jadi beri umpan balik saat selesai/gagal
   if (stageModel) {
     stageModel.addEventListener('model-loaded', () => {
-      if (activeDino) showToast(`✅ ${activeDino.name} siap`, 1800);
+      if (activeDino) {
+        showToast(`✅ ${activeDino.name} siap`, 1800);
+        scheduleStageLayout(50);
+      }
     });
     stageModel.addEventListener('model-error', () => {
       if (activeDino) showToast(`⚠️ Gagal memuat model ${activeDino.name}`, 3000);
@@ -209,9 +212,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  window.addEventListener('resize', enforceFullscreenCamera);
-  window.addEventListener('orientationchange', enforceFullscreenCamera);
-  setInterval(enforceFullscreenCamera, 200);
+  /**
+   * AR.js memakai matriks proyeksi kamera kalibrasi 4:3. Di layar portrait,
+   * rasio itu membuat model gepeng dan posisinya melenceng. Samakan komponen
+   * horizontal proyeksi dengan rasio kanvas; operasi ini idempoten sehingga
+   * aman dipanggil berkala dan tidak menumpuk.
+   * @returns {boolean} true jika matriks baru saja disesuaikan
+   */
+  function syncCameraProjection() {
+    const sceneEl = document.querySelector('a-scene');
+    const cam = sceneEl && sceneEl.camera;
+    if (!cam || !cam.projectionMatrix) return false;
+
+    const m = cam.projectionMatrix.elements;
+    if (!m[5]) return false;
+
+    const viewAspect = window.innerWidth / Math.max(1, window.innerHeight);
+    const targetP00 = m[5] / viewAspect;
+    if (Math.abs(m[0] - targetP00) < 0.001) return false;
+
+    m[0] = targetP00;
+    cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
+    return true;
+  }
+
+  window.addEventListener('resize', () => {
+    enforceFullscreenCamera();
+    syncCameraProjection();
+    scheduleStageLayout(150);
+  });
+  window.addEventListener('orientationchange', () => {
+    enforceFullscreenCamera();
+    setTimeout(() => {
+      syncCameraProjection();
+      scheduleStageLayout(150);
+    }, 300);
+  });
+  setInterval(() => {
+    enforceFullscreenCamera();
+    if (syncCameraProjection() && activeDino) scheduleStageLayout(0);
+  }, 200);
 
   /**
    * Helper pencocokan nama klip animasi tanpa terpengaruh huruf besar/kecil
@@ -285,6 +325,319 @@ document.addEventListener('DOMContentLoaded', () => {
   ensureVideoPlayback();
 
   // ==========================================================================
+  // PENEMPATAN MODEL RESPONSIF (PORTRAIT / LANDSCAPE)
+  // ==========================================================================
+
+  // Posisi dasar cameraStage dari index.html; jadi acuan sebelum digeser.
+  const stageBasePosition = { x: 0, y: -0.35, z: -1.8 };
+  if (cameraStage) {
+    const basePos = cameraStage.getAttribute('position');
+    if (basePos) {
+      stageBasePosition.x = basePos.x;
+      stageBasePosition.y = basePos.y;
+      stageBasePosition.z = basePos.z;
+    }
+  }
+
+  let layoutTimer = null;
+
+  // Faktor skala hanya boleh mengecil dalam satu sesi tampilan. Pose animasi
+  // (walk/idle) bisa melebar dan menyempit, jadi beberapa sampel pose diambil
+  // dan faktor terkecil yang dipakai agar model tidak pernah terpotong.
+  const fitGuard = { dinoId: null, factor: 1, w: 0, h: 0 };
+
+  function resetFitGuard(dinoId) {
+    fitGuard.dinoId = dinoId;
+    fitGuard.factor = 1;
+    fitGuard.w = window.innerWidth;
+    fitGuard.h = window.innerHeight;
+  }
+
+  function scheduleStageLayout(delay = 0) {
+    clearTimeout(layoutTimer);
+    layoutTimer = setTimeout(() => {
+      layoutActiveStage();
+      // Ulangi sekali lagi setelah AR.js selesai menyesuaikan proyeksi kamera.
+      setTimeout(layoutActiveStage, 300);
+    }, delay);
+  }
+
+  function parseScale(value) {
+    if (typeof value === 'string') {
+      const n = value.trim().split(/\s+/).map(Number);
+      const s = isFinite(n[0]) && n[0] !== 0 ? n[0] : 1;
+      return {
+        x: s,
+        y: isFinite(n[1]) ? n[1] : s,
+        z: isFinite(n[2]) ? n[2] : s
+      };
+    }
+    if (value && typeof value === 'object') {
+      const s = value.x || 1;
+      return { x: s, y: value.y || s, z: value.z || s };
+    }
+    return { x: 1, y: 1, z: 1 };
+  }
+
+  /**
+   * Area layar yang tidak tertutup HUD atas maupun kartu dinosaurus bawah.
+   */
+  function getSafeScreenArea() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const hudTop = document.querySelector('.hud-top');
+    const overlay = document.querySelector('.ar-overlay');
+
+    let top = hudTop ? hudTop.getBoundingClientRect().bottom + 12 : h * 0.1;
+    let bottom = h - 12;
+
+    if (dinoCard) {
+      const pad = overlay ? parseFloat(getComputedStyle(overlay).paddingBottom) || 0 : 0;
+      bottom = h - pad - dinoCard.offsetHeight - 20;
+    }
+
+    top = Math.max(8, top);
+    bottom = Math.min(h - 8, bottom);
+    if (bottom - top < h * 0.3) bottom = Math.min(h - 8, top + h * 0.3);
+
+    const side = Math.max(12, w * 0.04);
+    return { left: side, right: w - side, top, bottom };
+  }
+
+  /**
+   * Baca vektor posisi/rotasi dari string A-Frame ("x y z") atau objek.
+   */
+  function parseVec3(value, fallback) {
+    if (typeof value === 'string') {
+      const n = value.trim().split(/\s+/).map(Number);
+      return {
+        x: isFinite(n[0]) ? n[0] : fallback.x,
+        y: isFinite(n[1]) ? n[1] : fallback.y,
+        z: isFinite(n[2]) ? n[2] : fallback.z
+      };
+    }
+    if (value && typeof value === 'object') {
+      return {
+        x: isFinite(value.x) ? value.x : fallback.x,
+        y: isFinite(value.y) ? value.y : fallback.y,
+        z: isFinite(value.z) ? value.z : fallback.z
+      };
+    }
+    return { x: fallback.x, y: fallback.y, z: fallback.z };
+  }
+
+  /**
+   * Ukur kotak siluet model yang benar-benar tampil di layar.
+   *
+   * Bounding box geometri tidak bisa dipakai untuk mesh skinned: vertex aslinya
+   * berada di ruang bind-pose yang bisa ratusan kali lebih besar dari hasil
+   * skinning (mis. Spinosaurus 14.000 unit vs tinggi asli < 2 unit), sehingga
+   * perhitungan fit selalu salah dan model mengecil berlebihan.
+   *
+   * Solusinya: render adegan sekali ke render target kecil berlatar transparan,
+   * lalu pindai kanal alpha. Hasilnya identik dengan piksel yang terlihat di
+   * kanvas, termasuk pose animasi yang sedang berjalan.
+   */
+  let measureTarget = null;
+
+  /**
+   * @param {number} zoom - 1 = FOV normal; >1 = FOV diperlebar agar model yang
+   *   lebih besar dari layar tetap terukur utuh (tidak terpotong tepi kanvas).
+   */
+  function measureStageRect(zoom = 1) {
+    const sceneEl = document.querySelector('a-scene');
+    const renderer = sceneEl && sceneEl.renderer;
+    const cam = sceneEl && sceneEl.camera;
+    const THREE = window.THREE;
+    if (!renderer || !cam || !THREE) return null;
+
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    // Resolusi buffer mengikuti lebar layar agar hasil ukur tetap presisi,
+    // tanpa membuat readback mahal di perangkat lambat.
+    const mw = Math.min(320, Math.max(160, Math.round(w * 0.5)));
+    const mh = Math.max(1, Math.round(mw * h / w));
+
+    if (!measureTarget || measureTarget.width !== mw || measureTarget.height !== mh) {
+      if (measureTarget) measureTarget.dispose();
+      measureTarget = new THREE.WebGLRenderTarget(mw, mh);
+    }
+
+    const prevTarget = renderer.getRenderTarget();
+    const prevClearColor = renderer.getClearColor(new THREE.Color());
+    const prevClearAlpha = renderer.getClearAlpha();
+    const prevAutoClear = renderer.autoClear;
+    const prevProjection = cam.projectionMatrix.clone();
+
+    sceneEl.object3D.updateMatrixWorld(true);
+    cam.updateMatrixWorld(true);
+
+    if (zoom !== 1) {
+      cam.projectionMatrix.elements[0] /= zoom;
+      cam.projectionMatrix.elements[5] /= zoom;
+      cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
+    }
+
+    renderer.setRenderTarget(measureTarget);
+    renderer.setClearColor(0x000000, 0);
+    renderer.autoClear = true;
+    renderer.clear(true, true, true);
+    renderer.render(sceneEl.object3D, cam);
+
+    const buffer = new Uint8Array(mw * mh * 4);
+    renderer.readRenderTargetPixels(measureTarget, 0, 0, mw, mh, buffer);
+
+    renderer.setRenderTarget(prevTarget);
+    renderer.setClearColor(prevClearColor, prevClearAlpha);
+    renderer.autoClear = prevAutoClear;
+    if (zoom !== 1) {
+      cam.projectionMatrix.copy(prevProjection);
+      cam.projectionMatrixInverse.copy(prevProjection).invert();
+    }
+
+    let minX = mw;
+    let minY = mh;
+    let maxX = -1;
+    let maxY = -1;
+    for (let y = 0; y < mh; y++) {
+      const row = y * mw * 4;
+      for (let x = 0; x < mw; x++) {
+        if (buffer[row + x * 4 + 3] > 8) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    if (maxX < 0) return null;
+
+    // Kembalikan koordinat buffer (baris dimulai dari bawah) ke piksel layar
+    // dengan memperhitungkan FOV yang diperlebar.
+    const toScreenX = (px) => (zoom * (2 * (px / mw) - 1) * 0.5 + 0.5) * w;
+    const toScreenY = (py) => (0.5 - zoom * (2 * (py / mh) - 1) * 0.5) * h;
+
+    return {
+      minX: toScreenX(minX),
+      maxX: toScreenX(maxX + 1),
+      minY: toScreenY(maxY + 1),
+      maxY: toScreenY(minY)
+    };
+  }
+
+  /**
+   * Geser cameraStage berdasarkan selisih piksel di layar.
+   */
+  function shiftStageByPixels(dxPx, dyPx) {
+    if (!cameraStage || !activeDino) return;
+
+    const sceneEl = document.querySelector('a-scene');
+    const cam = sceneEl && sceneEl.camera;
+    if (!cam || !cam.projectionMatrix) return;
+
+    const m = cam.projectionMatrix.elements;
+    if (!m[0] || !m[5]) return;
+
+    const modelPos = parseVec3(activeDino.model.position, { x: 0, y: 0, z: 0 });
+    const depth = Math.max(0.1, -(stageBasePosition.z + modelPos.z));
+    const pos = cameraStage.getAttribute('position');
+    const nextX = pos.x + (dxPx * 2 / window.innerWidth) * (depth / m[0]);
+    const nextY = pos.y - (dyPx * 2 / window.innerHeight) * (depth / m[5]);
+
+    cameraStage.setAttribute('position', `${nextX} ${nextY} ${pos.z}`);
+    cameraStage.object3D.updateMatrixWorld(true);
+    cam.updateMatrixWorld(true);
+  }
+
+  /**
+   * Sesuaikan ukuran dan posisi model aktif agar selalu berada di area layar
+   * yang terlihat, baik di HP portrait maupun laptop landscape.
+   */
+  function layoutActiveStage() {
+    if (!activeDino || !cameraStage || !stageModel) return;
+
+    const baseScale = parseScale(activeDino.model.scale);
+    const basePos = parseVec3(activeDino.model.position, { x: 0, y: 0, z: 0 });
+
+    // Kembalikan ke transform kalibrasi sebelum diukur ulang.
+    cameraStage.setAttribute('position', `${stageBasePosition.x} ${stageBasePosition.y} ${stageBasePosition.z}`);
+    stageModel.setAttribute('position', `${basePos.x} ${basePos.y} ${basePos.z}`);
+    stageModel.setAttribute('scale', `${baseScale.x} ${baseScale.y} ${baseScale.z}`);
+    cameraStage.object3D.updateMatrixWorld(true);
+
+    // Ukur dengan FOV diperlebar agar model raksasa (Brachiosaurus,
+    // Pterodactyl) tetap terukur utuh meski melebihi lebar layar.
+    let rect = measureStageRect(4);
+    if (!rect || rect.maxX <= rect.minX || rect.maxY <= rect.minY) return;
+
+    const safe = getSafeScreenArea();
+    const availW = Math.max(1, safe.right - safe.left);
+    const availH = Math.max(1, safe.bottom - safe.top);
+
+    // Sisakan ruang untuk variasi pose animasi (walk/roar) agar tidak terpotong.
+    const fit = Math.min(
+      1,
+      (availW * 0.92) / (rect.maxX - rect.minX),
+      (availH * 0.88) / (rect.maxY - rect.minY)
+    );
+
+    // Ukuran layar berubah (rotasi/resize) = mulai hitungan baru.
+    if (fitGuard.w !== window.innerWidth || fitGuard.h !== window.innerHeight) {
+      resetFitGuard(activeDino.id);
+    }
+    if (fit < fitGuard.factor) fitGuard.factor = fit;
+
+    if (fitGuard.factor < 0.999) {
+      const f = fitGuard.factor;
+      stageModel.setAttribute('scale', `${baseScale.x * f} ${baseScale.y * f} ${baseScale.z * f}`);
+      cameraStage.object3D.updateMatrixWorld(true);
+    }
+
+    // Setelah muat, FOV normal cukup untuk pengukuran presisi.
+    rect = measureStageRect(1) || measureStageRect(4) || rect;
+
+    const portrait = window.innerHeight > window.innerWidth;
+
+    const computeDelta = (r) => {
+      if (portrait) {
+        // Portrait: pusatkan siluet di ruang bebas antara HUD atas dan kartu bawah.
+        return {
+          dx: (safe.left + safe.right) / 2 - (r.minX + r.maxX) / 2,
+          dy: (safe.top + safe.bottom) / 2 - (r.minY + r.maxY) / 2
+        };
+      }
+      // Landscape: pertahankan posisi kalibrasi, geser hanya jika keluar area.
+      let dx = 0;
+      let dy = 0;
+      if (r.minX < safe.left) dx = safe.left - r.minX;
+      else if (r.maxX > safe.right) dx = safe.right - r.maxX;
+      if (r.minY < safe.top) dy = safe.top - r.minY;
+      else if (r.maxY > safe.bottom) dy = safe.bottom - r.maxY;
+      return { dx, dy };
+    };
+
+    // Penggeseran berbasis kedalaman pusat bersifat pendekatan; ukur ulang
+    // sekali atau dua kali agar sisa pergeseran benar-benar nol.
+    for (let i = 0; i < 2; i++) {
+      const d = computeDelta(rect);
+      if (Math.abs(d.dx) < 0.5 && Math.abs(d.dy) < 0.5) break;
+      shiftStageByPixels(d.dx, d.dy);
+      const next = measureStageRect();
+      if (!next) break;
+      rect = next;
+    }
+  }
+
+  // AR.js dapat mengganti matriks proyeksi beberapa kali saat kamera siap.
+  const arSceneEl = document.querySelector('a-scene');
+  if (arSceneEl) {
+    arSceneEl.addEventListener('renderstart', () => {
+      syncCameraProjection();
+      scheduleStageLayout(200);
+    });
+  }
+
+  // ==========================================================================
   // MANAJEMEN DINOSAURUS & 3D MODEL
   // ==========================================================================
 
@@ -329,6 +682,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (dino.model.idleAnimation) {
         playDinoClip(stageModel, dino.model.idleAnimation, { loop: 'repeat', crossFadeDuration: 0.3 });
       }
+
+      // Sesuaikan posisi model dengan layar HP / laptop setelah model termuat.
+      resetFitGuard(dino.id);
+      scheduleStageLayout(50);
+      // Sampel beberapa pose animasi awal: faktor terkecil dipakai agar siluet
+      // yang melebar tidak keluar layar setelah beberapa detik.
+      [900, 1800, 3000].forEach((delay) => setTimeout(layoutActiveStage, delay));
     }
 
     // 2. Perbarui HUD Informasi
