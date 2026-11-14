@@ -68,6 +68,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }, duration);
   }
 
+  // Model 3D dimuat saat marker terdeteksi, jadi beri umpan balik saat selesai/gagal
+  if (stageModel) {
+    stageModel.addEventListener('model-loaded', () => {
+      if (activeDino) showToast(`✅ ${activeDino.name} siap`, 1800);
+    });
+    stageModel.addEventListener('model-error', () => {
+      if (activeDino) showToast(`⚠️ Gagal memuat model ${activeDino.name}`, 3000);
+    });
+  }
+
   // ==========================================================================
   // INSIALISASI & PERMISSION KAMERA
   // ==========================================================================
@@ -217,6 +227,36 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
+   * Memutar klip animasi pada entitas 3D.
+   * Komponen animation-mixer dihapus dan dipasang ulang agar mixer selalu dibuat
+   * baru. Ini penting karena A-Frame tidak memanggil update() jika data komponen
+   * sama persis, sehingga animasi yang sudah selesai (clampWhenFinished) tidak
+   * akan pernah diputar ulang.
+   */
+  function playDinoClip(entity, requestedClip, options = {}) {
+    if (!entity || !requestedClip) return;
+    const config = {
+      clip: resolveClipName(entity, requestedClip),
+      loop: options.loop || 'repeat',
+      clampWhenFinished: !!options.clampWhenFinished,
+      crossFadeDuration: options.crossFadeDuration !== undefined ? options.crossFadeDuration : 0.2
+    };
+    entity.removeAttribute('animation-mixer');
+    requestAnimationFrame(() => {
+      if (!activeDino) return;
+      entity.setAttribute('animation-mixer', config);
+    });
+  }
+
+  /**
+   * Kembalikan model ke animasi idle (dipakai saat suara dihentikan manual)
+   */
+  function restoreIdleAnimation(dino, entity) {
+    if (!dino || !entity) return;
+    playDinoClip(entity, dino.model.idleAnimation, { loop: 'repeat', crossFadeDuration: 0.2 });
+  }
+
+  /**
    * Memastikan elemen video AR.js berputar (autoplay on mobile)
    */
   function ensureVideoPlayback() {
@@ -271,6 +311,10 @@ document.addEventListener('DOMContentLoaded', () => {
     activeDino = dino;
     dismissedDinoId = null;
 
+    // Hentikan suara dinosaurus sebelumnya agar tidak tumpang tindih
+    window.DinoAudio.stop();
+    btnSound.classList.remove('playing');
+
     console.log(`[AR] Dinosaurus aktif: ${dino.name} (Mode: pinned)`);
 
     // Tampilkan model di anchor kamera sehingga selalu menghadap layar
@@ -283,11 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
       stageModel.setAttribute('rotation', dino.model.rotation);
 
       if (dino.model.idleAnimation) {
-        stageModel.setAttribute('animation-mixer', {
-          clip: dino.model.idleAnimation,
-          loop: 'repeat',
-          crossFadeDuration: 0.3
-        });
+        playDinoClip(stageModel, dino.model.idleAnimation, { loop: 'repeat', crossFadeDuration: 0.3 });
       }
     }
 
@@ -302,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCloseDino.style.display = 'flex';
     scannerHud.classList.add('hidden');
 
-    showToast(`🦕 ${dino.name} terdeteksi!`);
+    showToast(`🦕 ${dino.name} terdeteksi, memuat model...`);
   }
 
   /**
@@ -368,46 +408,43 @@ document.addEventListener('DOMContentLoaded', () => {
   function triggerRoar() {
     if (!activeDino) return;
 
+    const dino = activeDino;
+    const entity = getActiveEntity();
+
+    // Tekan kedua saat suara masih berbunyi: hentikan suara dan kembalikan model
+    // ke animasi idle agar tidak tertinggal kaku di pose terakhir roar.
     if (window.DinoAudio.isPlaying) {
       window.DinoAudio.stop();
       btnSound.classList.remove('playing');
+      restoreIdleAnimation(dino, entity);
       return;
     }
 
-    const activeEntity = getActiveEntity();
-
     // 1. Mulai suara roar
     window.DinoAudio.playRoar(
-      activeDino.sound,
+      dino.sound,
       // onStart callback
       () => {
+        if (activeDino !== dino) return;
         btnSound.classList.add('playing');
-        showToast(`🔊 ${activeDino.name} Mengaum!`, 2000);
+        showToast(`🔊 ${dino.name} Mengaum!`, 2000);
 
         // 2. Jalankan animasi Roar pada model 3D
-        if (activeEntity && activeDino.model.roarAnimation) {
-          const roarClip = resolveClipName(activeEntity, activeDino.model.roarAnimation);
-          activeEntity.setAttribute('animation-mixer', {
-            clip: roarClip,
+        if (dino.model.roarAnimation) {
+          playDinoClip(entity, dino.model.roarAnimation, {
             loop: 'once',
             clampWhenFinished: true,
-            crossFadeDuration: 0.2
+            crossFadeDuration: 0.15
           });
         }
       },
       // onEnd callback
       () => {
+        if (activeDino !== dino) return;
         btnSound.classList.remove('playing');
 
         // Kembalikan ke animasi Idle santai
-        if (activeEntity && activeDino && activeDino.model.idleAnimation) {
-          const idleClip = resolveClipName(activeEntity, activeDino.model.idleAnimation);
-          activeEntity.setAttribute('animation-mixer', {
-            clip: idleClip,
-            loop: 'repeat',
-            crossFadeDuration: 0.4
-          });
-        }
+        restoreIdleAnimation(dino, entity);
       }
     );
   }
@@ -566,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
         } catch (err) {}
-      }, 500);
+      }, 1000);
     } catch (e) {
       console.log("[QR Detector] BarcodeDetector tidak aktif:", e);
     }

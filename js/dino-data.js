@@ -45,7 +45,7 @@ window.DINO_DATABASE = [
 
     // --- SUARA AUDIO ---
     sound: {
-      url: "assets/Sound/T-Rex Roar.wav",
+      url: "assets/Sound/T-Rex Roar.mp3",
       synthType: "trex"
     },
 
@@ -93,7 +93,7 @@ Memiliki tengkorak kokoh berukuran hingga 1,5 meter dengan rahang berdaya gigit 
 
     // --- SUARA AUDIO ---
     sound: {
-      url: "assets/Sound/Spinosaurs roar.wav",
+      url: "assets/Sound/Spinosaurs roar.mp3",
       synthType: "spino"
     },
 
@@ -141,7 +141,7 @@ Ciri paling mencolok adalah sirip/layar tulang punggung raksasa yang tingginya m
 
     // --- SUARA AUDIO ---
     sound: {
-      url: "assets/Sound/Velociraptor call.wav",
+      url: "assets/Sound/Velociraptor call.mp3",
       synthType: "raptor"
     },
 
@@ -189,7 +189,7 @@ Senjata mematikan utamanya adalah cakar melengkung besar (sickle claw) sepanjang
 
     // --- SUARA AUDIO ---
     sound: {
-      url: "assets/Sound/Brachiosaurs roar.wav",
+      url: "assets/Sound/Brachiosaurs roar.mp3",
       synthType: "brachio"
     },
 
@@ -237,7 +237,7 @@ Struktur tubuh tersebut memberikan postur miring ke atas menyerupai jerapah mode
 
     // --- SUARA AUDIO ---
     sound: {
-      url: "assets/Sound/Pterodactyl_Sound.wav",
+      url: "assets/Sound/Pterodactyl_Sound.mp3",
       synthType: "raptor"
     },
 

@@ -8,7 +8,7 @@ Aplikasi Web Augmented Reality (AR) berbasis web statis (HTML, CSS, JavaScript) 
 
 1. **Pemindaian Marker / QR Code Kamera AR:**
    - Mendeteksi marker secara langsung melalui kamera HP / webcam laptop.
-   - Mendukung preset Hiro, Kanji, Matrix Barcode, dan file custom Pattern `.patt`.
+   - Menggunakan custom pattern marker `.patt` (dapat diganti melalui `js/dino-data.js` dan `index.html`).
 2. **Objek 3D Beranimasi:**
    - Menampilkan model 3D realistis dengan animasi *Idle* (santai) yang berputar secara otomatis.
    - Interaksi sentuh/mouse drag untuk memutar (rotasi) objek 3D di layar.
@@ -42,7 +42,7 @@ New Ar Project/
 │   ├── audio-synth.js      # Pemutar audio & synthesizer raungan Web Audio API
 │   └── app.js              # Pengendali logika AR, izin kamera, UI, & animasi
 ├── assets/
-│   ├── sounds/             # Folder file suara (.wav / .mp3)
+│   ├── Sound/              # File suara raungan (.mp3)
 │   ├── qr/                 # Folder gambar marker & file pattern (.patt)
 │   ├── T-Rex/              # Model 3D Tyrannosaurus Rex (.glb)
 │   ├── Spinosaur/          # Model 3D Spinosaurus (.glb)
@@ -51,6 +51,8 @@ New Ar Project/
 │   └── Pterodactyl/        # Model 3D Pterodactyl (.glb)
 └── README.md               # Dokumentasi panduan
 ```
+
+> **Catatan ukuran aset:** Seluruh model 3D sudah dioptimalkan (hanya animasi Idle & Roar yang dipertahankan, tekstur WebP, mesh kuantisasi/simplifikasi) sehingga total model + suara hanya sekitar **5 MB**. Model dimuat otomatis saat marker terdeteksi, bukan di-preload semuanya di awal.
 
 ---
 
@@ -70,7 +72,7 @@ Semua konfigurasi placeholder dapat Anda ubah dengan mudah pada file **`js/dino-
      ...
    }
    ```
-3. Jika menggunakan `<a-assets>` di `index.html`, pastikan tag `<a-asset-item>` mengarah ke file model tersebut.
+3. Model 3D dimuat langsung dari properti `model.url` saat marker terdeteksi (lazy load). Tidak perlu menambahkan `<a-assets>` / `<a-asset-item>` di `index.html`.
 
 ### 2. Mengganti Nama Animasi (Idle & Roar)
 Pada file `js/dino-data.js`:
@@ -81,11 +83,11 @@ roarAnimation: "nama_animasi_mengaum"  // Animasi saat tombol suara ditekan
 > **Tips:** Untuk mengetahui daftar nama animasi di dalam file GLB Anda, Anda dapat membuka file `.glb` menggunakan aplikasi seperti Blender atau glTF Viewer dan melihat daftar animasinya.
 
 ### 3. Mengganti Suara Audio Roar
-1. Letakkan file audio baru Anda (format `.mp3` atau `.wav`) di dalam folder `assets/sounds/`.
+1. Letakkan file audio baru Anda (format `.mp3`, disarankan bitrate 128 kbps) di dalam folder `assets/Sound/`.
 2. Buka `js/dino-data.js` dan ubah properti `sound.url`:
    ```javascript
    sound: {
-     url: "assets/sounds/suara-kustom-anda.mp3",
+     url: "assets/Sound/suara-kustom-anda.mp3",
      synthType: "trex"
    }
    ```
@@ -159,12 +161,12 @@ git push -u origin main
 1. Buka tautan GitHub Pages Anda (`https://<username>.github.io/<repo-name>/`) di browser ponsel (Google Chrome di Android atau Safari di iPhone).
 2. Klik **"Nyalakan Kamera & Mulai AR"**, lalu pilih **"Izinkan / Allow"** pada pop-up izin akses kamera.
 3. Buka halaman [`print-markers.html`](file:///c:/Users/UseR/Desktop/New%20Ar%20Project/print-markers.html) di layar monitor laptop untuk menampilkan marker, atau cetak di kertas A4.
-4. Arahkan kamera ponsel Anda ke gambar marker:
-   - **Marker Hiro** ➔ Memunculkan **Tyrannosaurus Rex**
-   - **Marker Kanji** ➔ Memunculkan **Spinosaurus**
-   - **Barcode Matrix 2** ➔ Memunculkan **Velociraptor**
-   - **Barcode Matrix 3** ➔ Memunculkan **Brachiosaurus**
-   - **Barcode Matrix 4** ➔ Memunculkan **Pterodactyl**
+4. Arahkan kamera ponsel Anda ke salah satu **custom pattern marker** (kolom `patternUrl` pada `js/dino-data.js`):
+   - **pattern-T-rex qr-code.patt** ➔ Memunculkan **Tyrannosaurus Rex**
+   - **pattern-Spinosaurus qr-code.patt** ➔ Memunculkan **Spinosaurus**
+   - **pattern-velociraptor qr-code.patt** ➔ Memunculkan **Velociraptor**
+   - **pattern-brachi qr-code.patt** ➔ Memunculkan **Brachiosaurus**
+   - **pattern-ptero qr-code.patt** ➔ Memunculkan **Pterodactyl**
 5. Tekan tombol **🔊 Suara Roar** untuk mendengarkan raungan asli dan animasi gerak mengaum.
 6. Tekan tombol **📖 Sejarah Singkat** untuk melihat fakta dan sejarah lengkapnya.
 7. Tekan tombol **✖ Silang** di kanan atas untuk menghilangkan objek dan memindai dinosaurus lain!
