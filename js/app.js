@@ -254,14 +254,24 @@ document.addEventListener('DOMContentLoaded', () => {
     return true;
   }
 
+  // Catat ukuran layar terakhir agar event resize dengan ukuran sama
+  // (umum terjadi di browser HP saat bilah alamat berubah) diabaikan.
+  let lastViewportW = window.innerWidth;
+  let lastViewportH = window.innerHeight;
+
   window.addEventListener('resize', () => {
     enforceFullscreenCamera();
     syncCameraProjection();
+    if (window.innerWidth === lastViewportW && window.innerHeight === lastViewportH) return;
+    lastViewportW = window.innerWidth;
+    lastViewportH = window.innerHeight;
     scheduleStageLayout(150);
   });
   window.addEventListener('orientationchange', () => {
     enforceFullscreenCamera();
     setTimeout(() => {
+      lastViewportW = window.innerWidth;
+      lastViewportH = window.innerHeight;
       syncCameraProjection();
       scheduleStageLayout(150);
     }, 300);
@@ -476,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const h = window.innerHeight;
     // Resolusi buffer mengikuti lebar layar agar hasil ukur tetap presisi,
     // tanpa membuat readback mahal di perangkat lambat.
-    const mw = Math.min(480, Math.max(200, Math.round(w * 0.6)));
+    const mw = Math.min(400, Math.max(192, Math.round(w * 0.55)));
     const mh = Math.max(1, Math.round(mw * h / w));
 
     if (!measureTarget || measureTarget.width !== mw || measureTarget.height !== mh) {
@@ -622,6 +632,13 @@ document.addEventListener('DOMContentLoaded', () => {
     cameraStage.object3D.updateMatrixWorld(true);
   }
 
+  // Pengali ukuran per dinosaurus agar model yang terasa terlalu besar
+  // (mis. Velociraptor) bisa dikecilkan tanpa mengubah skala dasar aslinya.
+  function getFitMultiplier(dino) {
+    const value = dino && dino.model && Number(dino.model.fitScale);
+    return isFinite(value) && value > 0 ? value : 1;
+  }
+
   /**
    * Abaikan pose sesaat yang jauh lebih lebar dari biasanya (mis. transisi
    * bind pose saat animasi baru mulai). Tanpa ini, satu pose transien bisa
@@ -671,7 +688,9 @@ document.addEventListener('DOMContentLoaded', () => {
           fit < fitGuard.factor
         ) {
           fitGuard.factor = fit;
-          layoutActiveStage();
+          // Terapkan ukuran saja tanpa menggeser posisi: penggeseran ulang
+          // di setiap sampel membuat model tampak bergoyang saat idle.
+          applyFitFactor(fit * getFitMultiplier(activeDino), baseScale);
         }
       }
 
@@ -680,7 +699,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fitSampleInterval = null;
         layoutActiveStage();
       }
-    }, 320);
+    }, 500);
   }
 
   /**
@@ -721,7 +740,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fitGuard.factor = fit;
     }
 
-    const appliedFit = isFinite(fitGuard.factor) ? fitGuard.factor : fit;
+    const appliedFit = (isFinite(fitGuard.factor) ? fitGuard.factor : fit) * getFitMultiplier(activeDino);
     applyFitFactor(appliedFit, baseScale);
 
     // Ukur lagi pada skala tampil untuk perataan posisi.
@@ -751,7 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // sekali atau dua kali agar sisa pergeseran benar-benar nol.
     for (let i = 0; rect && i < 2; i++) {
       const d = computeDelta(rect);
-      if (Math.abs(d.dx) < 0.5 && Math.abs(d.dy) < 0.5) break;
+      if (Math.abs(d.dx) < 1.5 && Math.abs(d.dy) < 1.5) break;
       shiftStageByPixels(d.dx, d.dy);
       rect = measureStageRect();
     }

@@ -135,6 +135,8 @@ Ciri paling mencolok adalah sirip/layar tulang punggung raksasa yang tingginya m
       scale: "0.35 0.35 0.35",
       position: "0 0.35 0.21",
       rotation: "0 -25 0",
+      // Proporsi otomatis membuat Velociraptor tampil terlalu besar di HP.
+      fitScale: 0.85,
       idleAnimation: "SK_Velociraptor.ao|AS_Velo_Crouch_Idle",
       roarAnimation: "SK_Velociraptor.ao|AS_Velo_Emote_Danger"
     },
