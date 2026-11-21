@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let activeDino = null;
   let dismissedCooldown = false;
   let dismissedDinoId = null;
+  // Pose animasi yang sedang tampil: layout tidak dihitung ulang saat roar
+  // karena pose khasnya lebih lebar dan ukuran model akan menyusut permanen.
+  let clipMode = 'idle';
 
   // DOM Elements - Camera Prompt
   const cameraPromptOverlay = document.getElementById('cameraPromptOverlay');
@@ -73,7 +76,22 @@ document.addEventListener('DOMContentLoaded', () => {
     stageModel.addEventListener('model-loaded', () => {
       if (activeDino) {
         showToast(`✅ ${activeDino.name} siap`, 1800);
+        // Transisi bind pose (berdiri tegak) bisa bertahan beberapa detik
+        // sebelum animasi idle mengambil alih; jangan ukur sebelum itu.
+        guardSamplingReadyAt = performance.now() + 4000;
         scheduleStageLayout(50);
+
+        // Sampel pose animasi setelah model benar-benar termuat: pose awal
+        // (bind pose) bisa lebih lebar dari pose animasi sehingga model
+        // tampak kecil. Sampel diambil sepanjang satu siklus idle agar pose
+        // paling lebar ikut terhitung dan tidak terpotong layar.
+        const dinoId = activeDino.id;
+        setTimeout(() => {
+          if (!activeDino || activeDino.id !== dinoId) return;
+          resetFitGuard(dinoId);
+          layoutActiveStage();
+          startClipFitSampling(dinoId);
+        }, 600);
       }
     });
     stageModel.addEventListener('model-error', () => {
@@ -293,7 +311,10 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function restoreIdleAnimation(dino, entity) {
     if (!dino || !entity) return;
+    clipMode = 'idle';
     playDinoClip(entity, dino.model.idleAnimation, { loop: 'repeat', crossFadeDuration: 0.2 });
+    // Perbarui tata letak bila layar sempat berubah saat animasi roar tampil.
+    scheduleStageLayout(50);
   }
 
   /**
@@ -341,16 +362,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let layoutTimer = null;
 
-  // Faktor skala hanya boleh mengecil dalam satu sesi tampilan. Pose animasi
-  // (walk/idle) bisa melebar dan menyempit, jadi beberapa sampel pose diambil
-  // dan faktor terkecil yang dipakai agar model tidak pernah terpotong.
-  const fitGuard = { dinoId: null, factor: 1, w: 0, h: 0 };
+  // Faktor skala diambil dari pose terlebar yang pernah terukur dalam satu
+  // sesi tampilan (nilai terkecil). Ini mencegah model membesar-mengecil saat
+  // animasi berjalan, sekaligus memastikan tidak ada pose yang terpotong.
+  const fitGuard = { dinoId: null, factor: Infinity, w: 0, h: 0 };
+  // Beberapa ratus milidetik pertama animasi masih berupa transisi bind pose
+  // yang jauh lebih lebar; jangan dipakai sebagai acuan ukuran.
+  let guardSamplingReadyAt = 0;
 
   function resetFitGuard(dinoId) {
     fitGuard.dinoId = dinoId;
-    fitGuard.factor = 1;
+    fitGuard.factor = Infinity;
     fitGuard.w = window.innerWidth;
     fitGuard.h = window.innerHeight;
+    recentSilhouetteWidths.length = 0;
   }
 
   function scheduleStageLayout(delay = 0) {
@@ -440,11 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   let measureTarget = null;
 
-  /**
-   * @param {number} zoom - 1 = FOV normal; >1 = FOV diperlebar agar model yang
-   *   lebih besar dari layar tetap terukur utuh (tidak terpotong tepi kanvas).
-   */
-  function measureStageRect(zoom = 1) {
+  function measureStageRect() {
     const sceneEl = document.querySelector('a-scene');
     const renderer = sceneEl && sceneEl.renderer;
     const cam = sceneEl && sceneEl.camera;
@@ -455,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const h = window.innerHeight;
     // Resolusi buffer mengikuti lebar layar agar hasil ukur tetap presisi,
     // tanpa membuat readback mahal di perangkat lambat.
-    const mw = Math.min(320, Math.max(160, Math.round(w * 0.5)));
+    const mw = Math.min(480, Math.max(200, Math.round(w * 0.6)));
     const mh = Math.max(1, Math.round(mw * h / w));
 
     if (!measureTarget || measureTarget.width !== mw || measureTarget.height !== mh) {
@@ -467,16 +488,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const prevClearColor = renderer.getClearColor(new THREE.Color());
     const prevClearAlpha = renderer.getClearAlpha();
     const prevAutoClear = renderer.autoClear;
-    const prevProjection = cam.projectionMatrix.clone();
 
     sceneEl.object3D.updateMatrixWorld(true);
     cam.updateMatrixWorld(true);
-
-    if (zoom !== 1) {
-      cam.projectionMatrix.elements[0] /= zoom;
-      cam.projectionMatrix.elements[5] /= zoom;
-      cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
-    }
 
     renderer.setRenderTarget(measureTarget);
     renderer.setClearColor(0x000000, 0);
@@ -490,10 +504,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderer.setRenderTarget(prevTarget);
     renderer.setClearColor(prevClearColor, prevClearAlpha);
     renderer.autoClear = prevAutoClear;
-    if (zoom !== 1) {
-      cam.projectionMatrix.copy(prevProjection);
-      cam.projectionMatrixInverse.copy(prevProjection).invert();
-    }
 
     let minX = mw;
     let minY = mh;
@@ -512,10 +522,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (maxX < 0) return null;
 
-    // Kembalikan koordinat buffer (baris dimulai dari bawah) ke piksel layar
-    // dengan memperhitungkan FOV yang diperlebar.
-    const toScreenX = (px) => (zoom * (2 * (px / mw) - 1) * 0.5 + 0.5) * w;
-    const toScreenY = (py) => (0.5 - zoom * (2 * (py / mh) - 1) * 0.5) * h;
+    // Kembalikan koordinat buffer (baris dimulai dari bawah) ke piksel layar.
+    const toScreenX = (px) => (2 * (px / mw) - 1) * 0.5 * w + 0.5 * w;
+    const toScreenY = (py) => (0.5 - (2 * (py / mh) - 1) * 0.5) * h;
 
     return {
       minX: toScreenX(minX),
@@ -523,6 +532,45 @@ document.addEventListener('DOMContentLoaded', () => {
       minY: toScreenY(maxY + 1),
       maxY: toScreenY(minY)
     };
+  }
+
+  /**
+   * Ukur siluet model pada skala dasar (bukan skala tampil saat ini).
+   *
+   * Model diperkecil sementara agar muat di dalam kanvas ukur, lalu hasilnya
+   * dibagi kembali. Pelebaran FOV manual tidak dipakai karena proyeksi AR.js
+   * tidak simetris, sehingga ukuran yang dihasilkan bisa meleset jauh.
+   */
+  function measureBaseRect(baseScale) {
+    if (!stageModel) return null;
+    const displayed = stageModel.getAttribute('scale');
+    const restore = displayed && isFinite(displayed.x)
+      ? `${displayed.x} ${displayed.y} ${displayed.z}`
+      : null;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    try {
+      for (let k = 0.5; k >= 0.015625; k /= 2) {
+        stageModel.setAttribute('scale', `${baseScale.x * k} ${baseScale.y * k} ${baseScale.z * k}`);
+        stageModel.object3D.updateMatrixWorld(true);
+        const rect = measureStageRect();
+        if (!rect) continue;
+        if (rect.minX <= 1 || rect.maxX >= w - 1 || rect.minY <= 1 || rect.maxY >= h - 1) {
+          continue;
+        }
+        return {
+          minX: 0,
+          minY: 0,
+          maxX: (rect.maxX - rect.minX) / k,
+          maxY: (rect.maxY - rect.minY) / k
+        };
+      }
+      return null;
+    } finally {
+      if (restore) stageModel.setAttribute('scale', restore);
+      stageModel.object3D.updateMatrixWorld(true);
+    }
   }
 
   /**
@@ -550,11 +598,98 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
+   * Hitung faktor skala agar siluet mengisi area layar yang aman.
+   * @param {{minX:number,minY:number,maxX:number,maxY:number}} rect
+   */
+  function computeFitFactor(rect) {
+    const safe = getSafeScreenArea();
+    const availW = Math.max(1, safe.right - safe.left);
+    const availH = Math.max(1, safe.bottom - safe.top);
+    // Isi area layar: perbesar model sampai mendekati batas aman, dengan
+    // batas atas agar dinosaurus kecil tidak membesar berlebihan.
+    const targetW = availW * 0.94;
+    const targetH = availH * 0.9;
+    return Math.min(
+      3,
+      targetW / Math.max(1, rect.maxX - rect.minX),
+      targetH / Math.max(1, rect.maxY - rect.minY)
+    );
+  }
+
+  function applyFitFactor(factor, baseScale) {
+    if (Math.abs(factor - 1) <= 0.001) return;
+    stageModel.setAttribute('scale', `${baseScale.x * factor} ${baseScale.y * factor} ${baseScale.z * factor}`);
+    cameraStage.object3D.updateMatrixWorld(true);
+  }
+
+  /**
+   * Abaikan pose sesaat yang jauh lebih lebar dari biasanya (mis. transisi
+   * bind pose saat animasi baru mulai). Tanpa ini, satu pose transien bisa
+   * membuat skala model menyusut permanen.
+   */
+  const recentSilhouetteWidths = [];
+
+  function isTransientWidePose(width) {
+    const recent = recentSilhouetteWidths.slice(-12);
+    if (recent.length >= 3) {
+      const sorted = recent.slice().sort((a, b) => a - b);
+      const median = sorted[Math.floor(sorted.length / 2)];
+      if (median > 0 && width > median * 2) return true;
+    }
+    recentSilhouetteWidths.push(width);
+    return false;
+  }
+
+  /**
+   * Samakan ukuran dengan pose terlebar dari satu siklus animasi idle.
+   * Sampel diambil sambil model tetap tampil pada skala saat ini, sehingga
+   * model tidak sempat mengecil lalu membesar lagi di depan pengguna.
+   */
+  let fitSampleInterval = null;
+
+  function startClipFitSampling(dinoId) {
+    clearInterval(fitSampleInterval);
+    const startedAt = performance.now();
+
+    fitSampleInterval = setInterval(() => {
+      if (!activeDino || activeDino.id !== dinoId || clipMode !== 'idle') {
+        clearInterval(fitSampleInterval);
+        fitSampleInterval = null;
+        return;
+      }
+
+      // Lewati masa transisi bind pose beberapa ratus milidetik pertama.
+      if (performance.now() - startedAt < 1000) return;
+      if (performance.now() < guardSamplingReadyAt) return;
+
+      const baseScale = parseScale(activeDino.model.scale);
+      const baseRect = measureBaseRect(baseScale);
+      if (baseRect && baseRect.maxX > baseRect.minX && baseRect.maxY > baseRect.minY) {
+        const fit = computeFitFactor(baseRect);
+        if (
+          !isTransientWidePose(baseRect.maxX) &&
+          fit < fitGuard.factor
+        ) {
+          fitGuard.factor = fit;
+          layoutActiveStage();
+        }
+      }
+
+      if (performance.now() - startedAt > 10000) {
+        clearInterval(fitSampleInterval);
+        fitSampleInterval = null;
+        layoutActiveStage();
+      }
+    }, 320);
+  }
+
+  /**
    * Sesuaikan ukuran dan posisi model aktif agar selalu berada di area layar
    * yang terlihat, baik di HP portrait maupun laptop landscape.
    */
   function layoutActiveStage() {
     if (!activeDino || !cameraStage || !stageModel) return;
+    if (clipMode === 'roar') return;
 
     const baseScale = parseScale(activeDino.model.scale);
     const basePos = parseVec3(activeDino.model.position, { x: 0, y: 0, z: 0 });
@@ -565,36 +700,32 @@ document.addEventListener('DOMContentLoaded', () => {
     stageModel.setAttribute('scale', `${baseScale.x} ${baseScale.y} ${baseScale.z}`);
     cameraStage.object3D.updateMatrixWorld(true);
 
-    // Ukur dengan FOV diperlebar agar model raksasa (Brachiosaurus,
-    // Pterodactyl) tetap terukur utuh meski melebihi lebar layar.
-    let rect = measureStageRect(4);
-    if (!rect || rect.maxX <= rect.minX || rect.maxY <= rect.minY) return;
-
-    const safe = getSafeScreenArea();
-    const availW = Math.max(1, safe.right - safe.left);
-    const availH = Math.max(1, safe.bottom - safe.top);
-
-    // Sisakan ruang untuk variasi pose animasi (walk/roar) agar tidak terpotong.
-    const fit = Math.min(
-      1,
-      (availW * 0.92) / (rect.maxX - rect.minX),
-      (availH * 0.88) / (rect.maxY - rect.minY)
-    );
-
     // Ukuran layar berubah (rotasi/resize) = mulai hitungan baru.
     if (fitGuard.w !== window.innerWidth || fitGuard.h !== window.innerHeight) {
       resetFitGuard(activeDino.id);
     }
-    if (fit < fitGuard.factor) fitGuard.factor = fit;
 
-    if (fitGuard.factor < 0.999) {
-      const f = fitGuard.factor;
-      stageModel.setAttribute('scale', `${baseScale.x * f} ${baseScale.y * f} ${baseScale.z * f}`);
-      cameraStage.object3D.updateMatrixWorld(true);
+    // Ukur siluet pada skala dasar: model besar seperti Brachiosaurus dan
+    // Pterodactyl sengaja diperkecil sementara agar tidak terpotong kanvas.
+    const baseRect = measureBaseRect(baseScale);
+    if (!baseRect || baseRect.maxX <= baseRect.minX || baseRect.maxY <= baseRect.minY) return;
+
+    const safe = getSafeScreenArea();
+    const fit = computeFitFactor(baseRect);
+    const guardReady = performance.now() >= guardSamplingReadyAt;
+    // Sebelum siap, hasil ukur belum boleh mengunci ukuran: bind pose yang
+    // sedang bertransisi akan membuat model kecil permanen.
+    const transient = guardReady ? isTransientWidePose(baseRect.maxX - baseRect.minX) : true;
+
+    if (guardReady && !transient && fit < fitGuard.factor) {
+      fitGuard.factor = fit;
     }
 
-    // Setelah muat, FOV normal cukup untuk pengukuran presisi.
-    rect = measureStageRect(1) || measureStageRect(4) || rect;
+    const appliedFit = isFinite(fitGuard.factor) ? fitGuard.factor : fit;
+    applyFitFactor(appliedFit, baseScale);
+
+    // Ukur lagi pada skala tampil untuk perataan posisi.
+    let rect = measureStageRect();
 
     const portrait = window.innerHeight > window.innerWidth;
 
@@ -618,13 +749,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Penggeseran berbasis kedalaman pusat bersifat pendekatan; ukur ulang
     // sekali atau dua kali agar sisa pergeseran benar-benar nol.
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; rect && i < 2; i++) {
       const d = computeDelta(rect);
       if (Math.abs(d.dx) < 0.5 && Math.abs(d.dy) < 0.5) break;
       shiftStageByPixels(d.dx, d.dy);
-      const next = measureStageRect();
-      if (!next) break;
-      rect = next;
+      rect = measureStageRect();
     }
   }
 
@@ -663,6 +792,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     activeDino = dino;
     dismissedDinoId = null;
+    clipMode = 'idle';
 
     // Hentikan suara dinosaurus sebelumnya agar tidak tumpang tindih
     window.DinoAudio.stop();
@@ -686,11 +816,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Sesuaikan posisi model dengan layar HP / laptop setelah model termuat.
       resetFitGuard(dino.id);
       scheduleStageLayout(50);
-      // Sampel beberapa pose animasi awal: faktor terkecil dipakai agar siluet
-      // yang melebar tidak keluar layar setelah beberapa detik.
-      [900, 1800, 3000].forEach((delay) => setTimeout(layoutActiveStage, delay));
     }
-
     // 2. Perbarui HUD Informasi
     dinoNameEl.textContent = dino.name;
     dinoSubtitleEl.textContent = dino.subtitle || dino.scientificName;
@@ -791,6 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Jalankan animasi Roar pada model 3D
         if (dino.model.roarAnimation) {
+          clipMode = 'roar';
           playDinoClip(entity, dino.model.roarAnimation, {
             loop: 'once',
             clampWhenFinished: true,

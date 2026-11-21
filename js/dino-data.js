@@ -38,7 +38,7 @@ window.DINO_DATABASE = [
       url: "assets/T-Rex/t-rex.glb",
       scale: "0.16 0.16 0.16",
       position: "0 0.003 0.35",
-      rotation: "0 0 0",
+      rotation: "0 -12 0",
       idleAnimation: "idle attack",
       roarAnimation: "Big roar step"
     },
@@ -86,7 +86,7 @@ Memiliki tengkorak kokoh berukuran hingga 1,5 meter dengan rahang berdaya gigit 
       url: "assets/Spinosaur/spinosaur_the_isle_lecasi.glb",
       scale: "0.55 0.55 0.55",
       position: "0 0.45 0.35",
-      rotation: "0 0 0",
+      rotation: "0 -20 0",
       idleAnimation: "SK_Spinosaurus.ao|AS_Spino_WalkF",
       roarAnimation: "SK_Spinosaurus.ao|AS_Spino_Emote_Broadcast"
     },
@@ -134,7 +134,7 @@ Ciri paling mencolok adalah sirip/layar tulang punggung raksasa yang tingginya m
       url: "assets/Velociraptor/velociraptor_the_isle_lecasi.glb",
       scale: "0.35 0.35 0.35",
       position: "0 0.35 0.21",
-      rotation: "0 0 0",
+      rotation: "0 -25 0",
       idleAnimation: "SK_Velociraptor.ao|AS_Velo_Crouch_Idle",
       roarAnimation: "SK_Velociraptor.ao|AS_Velo_Emote_Danger"
     },
