@@ -1081,13 +1081,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('histDinoName').textContent = activeDino.name;
     document.getElementById('histScientificName').textContent = activeDino.scientificName;
+    document.getElementById('histZaman').textContent = activeDino.zaman;
     document.getElementById('histEra').textContent = activeDino.era;
+    document.getElementById('histAppeared').textContent = activeDino.appeared;
     document.getElementById('histDiet').textContent = activeDino.diet;
     document.getElementById('histSize').textContent = activeDino.size;
     document.getElementById('histWeight').textContent = activeDino.weight;
 
     // Teks sejarah singkat
     document.getElementById('histDescription').textContent = activeDino.history;
+    document.getElementById('histExtinction').textContent = activeDino.extinction;
 
     // Fakta menarik (bullet points)
     const funFactsEl = document.getElementById('histFunFacts');
